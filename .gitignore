@@ -87,44 +87,82 @@ web_modules/
 .next
 out
 
-# Nuxt.js build / generate output
-.nuxt
-dist
+# React Native specific
+android/
+ios/
+*.keystore
+!android/app/src/main/assets/index.android.bundle
+!android/app/src/main/res/values/strings.xml
+*.gradle
+*.iml
+*.hprof
+*.orig
+*.rej
+*.sublime-workspace
+*.sublime-project
+.idea/
+build/
+android/.cxx/
+ios/build/
 
-# Gatsby files
-.cache/
-# Comment in the public line in if your project uses Gatsby and not Next.js
-# https://nextjs.org/blog/next-9-1#public-directory-support
-# public
+# React Native Packager
+.expo/
+.expo-shared/
+react-native.config.js
+index.android.bundle
+index.ios.bundle
+*.swp
 
-# vuepress build output
-.vuepress/dist
+# CocoaPods
+ios/Pods/
+ios/Podfile.lock
 
-# vuepress v2.x temp and cache directory
-.temp
-.cache
+# Fastlane
+ios/fastlane/report.xml
+ios/fastlane/Preview.html
+ios/fastlane/screenshots
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
 
-# Docusaurus cache and generated files
-.docusaurus
+# Metro bundler cache
+*.tmp
+*.temp
+.expo
 
-# Serverless directories
-.serverless/
+# Gradle files
+.gradle/
+*.lock
 
-# FuseBox cache
-.fusebox/
+# Buck project files
+buck-out/
+\.buckconfig.local
+\.buckd/
+\.watchmanconfig
 
-# DynamoDB Local files
-.dynamodb/
+# Misc
+.DS_Store
+.vscode/
+*.gz
+*.zip
+*.plist
+*.bak
 
-# TernJS port file
-.tern-port
-
-# Stores VSCode versions used for testing VSCode extensions
-.vscode-test
-
-# yarn v2
+# Yarn v2
 .yarn/cache
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Miscellaneous system files
+Thumbs.db
+Desktop.ini
+
+# Test and debug output
+__tests__/
+coverage/
+debug.log
+
+# React Native Debugger
+.react-native-debugger.json
