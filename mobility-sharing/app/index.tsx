@@ -1,32 +1,84 @@
+// app/login.tsx
+import { useState } from "react";
+import {
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  StyleSheet,
+} from "react-native";
+import { useAuth } from "./context/AuthContext";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Text, View, StyleSheet } from "react-native";
 
-export default function Index() {
+export default function Login() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const { login } = useAuth();
   const router = useRouter();
-  const [isReady, setIsReady] = useState(false);
 
-  useEffect(() => {
-    setIsReady(true);
-  }, []);
-
-  useEffect(() => {
-    if (isReady) {
-      router.push("/components/login");
+  const handleLogin = async () => {
+    try {
+      await login(username, password);
+      router.replace("/home");
+    } catch {
+      alert("Incorrect username or password");
     }
-  }, [isReady, router]);
+  };
 
   return (
     <View style={styles.container}>
-      <Text>Redirecting to Login...</Text>
+      <Text style={styles.title}>Login</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Username"
+        value={username}
+        onChangeText={setUsername}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        value={password}
+        onChangeText={setPassword}
+        secureTextEntry
+      />
+      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+        <Text style={styles.buttonText}>Login</Text>
+      </TouchableOpacity>
     </View>
   );
 }
+
+Login.options = {
+  title: "Login",
+  
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  title: {
+    fontSize: 24,
+    marginBottom: 20,
+  },
+  input: {
+    width: 250,
+    height: 40,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    marginBottom: 10,
+    paddingHorizontal: 10,
+  },
+  button: {
+    backgroundColor: "#007bff",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
   },
 });
