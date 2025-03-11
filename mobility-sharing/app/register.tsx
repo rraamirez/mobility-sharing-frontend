@@ -10,23 +10,29 @@ import { useAuth } from "./context/AuthContext";
 import { useRouter } from "expo-router";
 import { Stack } from "expo-router";
 
-export default function Login() {
+export default function Register() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const { register } = useAuth();
   const router = useRouter();
 
-  const handleLogin = async () => {
-    try {
-      await login(username, password);
-      router.replace("/home");
-    } catch {
-      alert("Incorrect username or password");
-    }
-  };
+  const isFormValid = name && email && username && password;
 
-  const handleRegister = () => {
-    router.push("/register");
+  const handleRegister = async () => {
+    try {
+      const response = await register(name, email, username, password);
+      if (!response.success) {
+        alert(response.message);
+        return;
+      } else {
+        alert("Registration successful!");
+        router.replace("/");
+      }
+    } catch {
+      alert("Registration failed. Please try again.");
+    }
   };
 
   return (
@@ -34,16 +40,33 @@ export default function Login() {
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.container}>
         <Text style={styles.subtitle}>
-          Redefining movement. Driving the future.
+          Join the movement. Drive the future.
         </Text>
-        <Text style={styles.title}>Mobility Sharing</Text>
+        <Text style={styles.title}>Create Account</Text>
 
+        <TextInput
+          style={styles.input}
+          placeholder="Full Name"
+          placeholderTextColor="#aaa"
+          value={name}
+          onChangeText={setName}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Email"
+          placeholderTextColor="#aaa"
+          value={email}
+          onChangeText={setEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+        />
         <TextInput
           style={styles.input}
           placeholder="Username"
           placeholderTextColor="#aaa"
           value={username}
           onChangeText={setUsername}
+          autoCapitalize="none"
         />
         <TextInput
           style={styles.input}
@@ -54,14 +77,20 @@ export default function Login() {
           secureTextEntry
         />
 
-        <TouchableOpacity style={styles.button} onPress={handleLogin}>
-          <Text style={styles.buttonText}>Login</Text>
+        <TouchableOpacity
+          style={styles.button}
+          disabled={!isFormValid}
+          onPress={handleRegister}
+        >
+          <Text style={styles.buttonText}>Sign Up</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.registerButton}
-          onPress={handleRegister}
+          onPress={() => router.replace("/")}
         >
-          <Text style={styles.registerText}>Register</Text>
+          <Text style={styles.registerText}>
+            Already have an account? Log in
+          </Text>
         </TouchableOpacity>
       </View>
     </>
@@ -73,15 +102,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#000", // Fondo negro
+    backgroundColor: "#000",
   },
   title: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#fff",
-    marginBottom: 40,
+    marginBottom: 30,
     textTransform: "uppercase",
     letterSpacing: 2,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#aaa",
+    marginBottom: 10,
+    textAlign: "center",
+    fontStyle: "italic",
   },
   input: {
     width: 280,
@@ -92,7 +128,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginBottom: 20,
     paddingHorizontal: 10,
-    borderColor: "white",
   },
   button: {
     width: 280,
@@ -114,13 +149,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     textDecorationLine: "underline",
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#aaa",
-    marginBottom: 10,
-    textAlign: "center",
-    fontStyle: "italic",
-    width: 600,
   },
 });

@@ -3,12 +3,19 @@ import {
   login as loginService,
   logout as logoutService,
   getToken,
+  register as registerService,
 } from "../services/authService";
 
 interface AuthContextType {
   token: string | null;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
+  register: (
+    name: string,
+    email: string,
+    username: string,
+    password: string
+  ) => Promise<{ success: boolean; message: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,8 +43,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setToken(null);
   };
 
+  const register = async (
+    name: string,
+    email: string,
+    username: string,
+    password: string
+  ) => {
+    try {
+      await registerService(name, email, username, password);
+      return { success: true, message: "Registration successful!" };
+    } catch (error: any) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Error during registration",
+      };
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ token, login, logout }}>
+    <AuthContext.Provider value={{ token, login, logout, register }}>
       {children}
     </AuthContext.Provider>
   );
