@@ -38,14 +38,19 @@ export const logout = async () => {
   }
 };
 
-export const register = async (name: string, email: string, username: string, password: string) => {
+export const register = async (
+  name: string,
+  email: string,
+  username: string,
+  password: string
+) => {
   try {
     const response = await axios.post(`${API_URL}/register`, {
       name,
       email,
       username,
       password,
-      roleId: 1, 
+      roleId: 1,
     });
 
     if (response.status === 200) {
@@ -55,12 +60,22 @@ export const register = async (name: string, email: string, username: string, pa
     throw new Error("Invalid response from server");
   } catch (error: any) {
     console.error("Register error:", error.response?.data || error.message);
-    return { success: false, message: error.response?.data?.message || "Error while registering" };
+    return {
+      success: false,
+      message: error.response?.data?.message || "Error while registering",
+    };
   }
 };
-
-
 
 export const getToken = async () => {
   return await AsyncStorage.getItem("access_token");
 };
+
+const authService = {
+  login,
+  logout,
+  register,
+  getToken,
+};
+
+export default authService;

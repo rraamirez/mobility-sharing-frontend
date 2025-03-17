@@ -19,7 +19,7 @@ export default function Login() {
   const handleLogin = async () => {
     try {
       await login(username, password);
-      router.replace("/home");
+      router.replace("/profile");
     } catch {
       alert("Incorrect username or password");
     }
