@@ -1,44 +1,56 @@
-import { useState, useEffect } from "react";
+import React, { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
   FlatList,
+  TextInput,
 } from "react-native";
 import { UserModel } from "../models/Users";
 import userService from "../services/userService";
-import ratingService from "../services/ratingService"; // Importa el servicio de ratings
+import ratingService from "../services/ratingService";
+import travelService from "../services/travelService";
 import { RatingModel } from "../models/RatingModel";
 import RatingCard from "../components/RatingCard";
+import { TravelModel } from "../models/TravelModel";
+import { AirbnbRating } from "react-native-ratings";
+import Modal from "react-native-modal";
+import Icon from "react-native-vector-icons/FontAwesome";
 
 export default function Ratings() {
   const [view, setView] = useState("toRate");
   const [user, setUser] = useState<UserModel | null>(null);
-  //const [tripsToRate, setTripsToRate] = useState([]);
+  const [tripsToRate, setTripsToRate] = useState<TravelModel[]>([]);
   const [ratedTrips, setRatedTrips] = useState<RatingModel[]>([]);
   const [receivedRatings, setReceivedRatings] = useState<RatingModel[]>([]);
 
-  // Función para obtener el usuario y sus valoraciones
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedTrip, setSelectedTrip] = useState<TravelModel | null>(null);
+  const [rating, setRating] = useState(5);
+  const [comment, setComment] = useState("");
+
   const fetchUserData = async () => {
     try {
       const fetchedUser = await userService.getMyUser();
       setUser(fetchedUser);
 
       // // get travellsss
-      // const trips = await ratingService.getRatingsByRatingUser(fetchedUser.id);
-      // setTripsToRate(trips);
+      const trips = await travelService.getUnratedTrips(fetchedUser.id);
+      setTripsToRate(trips);
 
       const ratedTrips = await ratingService.getRatingsByRatingUser(
         fetchedUser.id
       );
       setRatedTrips(ratedTrips);
 
-      // Cargar las valoraciones recibidas
       const receivedRatings = await ratingService.getRatingsByRatedUser(
         fetchedUser.id
       );
       setReceivedRatings(receivedRatings);
+
+      console.log("trips to rate:", trips);
 
       console.log("Rated trips:", ratedTrips);
       console.log("Received ratings:", receivedRatings);
@@ -47,10 +59,55 @@ export default function Ratings() {
     }
   };
 
-  // Llamamos a la función cuando el componente se monta
-  useEffect(() => {
-    fetchUserData();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
+
+  // Function to handle trip rating
+  const rateTrip = async (tripId: number) => {
+    try {
+      alert("Rating trip with id: " + tripId);
+      fetchUserData();
+    } catch (error) {
+      console.error("Error while rating trip:", error);
+    }
+  };
+
+  const openRatingModal = (trip: TravelModel) => {
+    setSelectedTrip(trip);
+    setModalVisible(true);
+
+    console.log("Selected trip:", trip);
+  };
+
+  const submitRating = async () => {
+    if (!selectedTrip) return;
+    console.log("Submitting rating:", {
+      rating,
+      comment,
+      tripId: selectedTrip.id,
+    });
+    let newRating: RatingModel = {
+      id: 0,
+      ratingUser: user!,
+      ratedUser: selectedTrip.driver,
+      travel: selectedTrip,
+      rating,
+      comment,
+      createdAt: null!,
+    };
+    console.log("New rating:", newRating);
+    try {
+      await ratingService.createRating(newRating);
+      setModalVisible(false);
+      setComment("");
+      fetchUserData();
+    } catch (error) {
+      console.error("Error while submitting rating:", error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -83,20 +140,33 @@ export default function Ratings() {
       </View>
 
       <View style={styles.content}>
-        {/* {view === "toRate" && (
+        {view === "toRate" && (
           <FlatList
             data={tripsToRate}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <View style={styles.card}>
-                <Text style={styles.cardTitle}>{item.trip}</Text>
-                <TouchableOpacity style={styles.rateButton}>
+                <Text
+                  style={styles.cardTitle}
+                >{`${item.origin} ➡️ ${item.destination}`}</Text>
+                <Text
+                  style={styles.cardText}
+                >{`Driver: ${item.driver.name}`}</Text>
+                <Text style={styles.cardText}>{`Date: ${item.date}`}</Text>
+                <Text style={styles.cardText}>{`Time: ${item.time}`}</Text>
+                <Text
+                  style={styles.cardText}
+                >{`Date: ${item.driver.name}`}</Text>
+                <TouchableOpacity
+                  style={styles.rateButton}
+                  onPress={() => openRatingModal(item)}
+                >
                   <Text style={styles.buttonText}>Rate Now</Text>
                 </TouchableOpacity>
               </View>
             )}
           />
-        )} */}
+        )}
 
         {view === "rated" && (
           <FlatList
@@ -115,9 +185,37 @@ export default function Ratings() {
         )}
       </View>
 
-      <TouchableOpacity style={styles.backButton}>
-        <Text style={styles.buttonText}>Go Back</Text>
-      </TouchableOpacity>
+      <Modal
+        isVisible={modalVisible}
+        onBackdropPress={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Rate this trip</Text>
+          <View style={{ flexDirection: "row", marginVertical: 10 }}>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <TouchableOpacity key={star} onPress={() => setRating(star)}>
+                <Icon
+                  name={star <= rating ? "star" : "star-o"}
+                  size={30}
+                  color="gold"
+                  style={{ marginHorizontal: 5 }}
+                />
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Leave a comment..."
+            placeholderTextColor="#aaa"
+            onChangeText={setComment}
+            value={comment}
+          />
+          <TouchableOpacity style={styles.submitButton} onPress={submitRating}>
+            <Text style={styles.buttonText}>Submit</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -176,4 +274,30 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   buttonText: { color: "#fff", fontSize: 16 },
+  modalContainer: {
+    backgroundColor: "#222",
+    padding: 20,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 10,
+  },
+  input: {
+    width: "100%",
+    backgroundColor: "#333",
+    color: "#fff",
+    padding: 10,
+    borderRadius: 5,
+    marginVertical: 10,
+  },
+  submitButton: {
+    backgroundColor: "#f0ad4e",
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+  },
 });
