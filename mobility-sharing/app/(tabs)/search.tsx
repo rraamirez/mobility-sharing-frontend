@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   TextInput,
@@ -6,10 +6,15 @@ import {
   Text,
   StyleSheet,
   ActivityIndicator,
+  TouchableOpacity,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import travelService from "../services/travelService";
 import { TravelModel } from "../models/TravelModel";
+import { UserModel } from "../models/Users";
+import userService from "../services/userService";
+import userTravelService from "../services/userTravelService";
+import { useFocusEffect } from "expo-router";
 
 export default function Search() {
   const [origin, setOrigin] = useState("");
@@ -17,6 +22,23 @@ export default function Search() {
   const [results, setResults] = useState<TravelModel[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<UserModel | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUser();
+    }, [])
+  );
+
+  const fetchUser = async () => {
+    try {
+      const fetchedUser = await userService.getMyUser();
+      setUser(fetchedUser);
+      console.log("Fetched user:", user);
+    } catch (error) {
+      console.error("Error while fetching user:", error);
+    }
+  };
 
   const handleSearch = async () => {
     if (!origin || !destination) return;
@@ -29,7 +51,6 @@ export default function Search() {
         origin.trim(),
         destination.trim()
       );
-      console.log("Search results:", data); // Debugging line
       setResults(data);
     } catch (err: any) {
       setError(err.message);
@@ -38,9 +59,22 @@ export default function Search() {
     }
   };
 
+  const bookTravel = async (travelId: number): Promise<void> => {
+    if (!user) {
+      console.error("User not found. Cannot book travel.");
+      return;
+    }
+    if (!travelId) {
+      console.error("Travel ID is required to book travel.");
+      return;
+    }
+    const data = await userTravelService.bookTravel(travelId, user!.id);
+    console.log("Booking response:", data);
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.slogan}>Its your moment. Take the ride </Text>
+      <Text style={styles.slogan}>It's your moment. Take the ride.</Text>
 
       <TextInput
         style={styles.searchInput}
@@ -68,23 +102,32 @@ export default function Search() {
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.resultItem}>
-            <Ionicons name="car-outline" size={20} color="#fff" />
+            <Ionicons name="car-outline" size={24} color="#fff" />
             <View style={styles.resultInfo}>
-              <Text
-                style={styles.resultText}
-              >{`${item.origin} ➝ ${item.destination}`}</Text>
+              <Text style={styles.resultText}>
+                {`${item.origin} ➝ ${item.destination}`}
+              </Text>
               <Text
                 style={styles.driverText}
               >{`👤 Driver: ${item.driver.name}`}</Text>
-              <Text
-                style={styles.priceText}
-              >{`💰 Price: ${item.price} Rupees `}</Text>
+              <Text style={styles.priceText}>{`💰 ${item.price} Rupees`}</Text>
               <Text
                 style={styles.dateText}
               >{`📅 ${item.date} ⏰ ${item.time}`}</Text>
-              <Text style={styles.driverText}>{`🔁 Recurrent travel: ${
-                item.travelRecurrenceModel?.id ? "Yes :)" : "No :("
-              }`}</Text>
+              <Text style={styles.recurrenceText}>
+                {`🔁 Recurrent travel: ${
+                  item.travelRecurrenceModel?.id ? "Yes" : "No"
+                }`}
+              </Text>
+            </View>
+
+            <View>
+              <TouchableOpacity
+                style={styles.bookButton}
+                onPress={() => bookTravel(item.id)}
+              >
+                <Text style={styles.bookButtonText}>Book Now</Text>
+              </TouchableOpacity>
             </View>
           </View>
         )}
@@ -107,7 +150,7 @@ const styles = StyleSheet.create({
   },
   slogan: {
     color: "#FFF",
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 20,
@@ -129,11 +172,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#333",
-    padding: 10,
+    padding: 15,
     marginBottom: 10,
     borderRadius: 8,
+    justifyContent: "space-between",
   },
   resultInfo: {
+    flex: 1,
     marginLeft: 10,
   },
   resultText: {
@@ -149,6 +194,19 @@ const styles = StyleSheet.create({
   },
   dateText: {
     color: "#0DBF6F",
+  },
+  recurrenceText: {
+    color: "#FF6347",
+  },
+  bookButton: {
+    backgroundColor: "#0DBF6F",
+    paddingVertical: 8,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+  },
+  bookButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
   errorText: {
     color: "red",

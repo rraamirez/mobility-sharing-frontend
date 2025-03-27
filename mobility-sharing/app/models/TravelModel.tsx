@@ -1,4 +1,4 @@
-import { TravelRecurrence } from "./TravelRecurrenteModel";
+import { TravelRecurrence } from "./TravelRecurrentModel";
 import { UserModel } from "./Users";
 
 export interface TravelModel {
