@@ -10,7 +10,7 @@ export const bookTravel = async (travelId: number, userId: number) => {
       id: 0,
       user: { id: userId },
       travel: { id: travelId },
-      status: "PENDING",
+      status: "pending",
     };
 
     const response = await api.post(`${API_URL}/`, userTravelModel);
