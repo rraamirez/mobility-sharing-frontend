@@ -14,8 +14,25 @@ export const getUnratedTrips = async (userId: number) => {
   }
 };
 
+export const getTravelsByOriginAndDestination = async (
+  origin: string,
+  destination: string
+): Promise<TravelModel[]> => {
+  try {
+    const response = await api.get(`${API_URL}/origin-destination`, {
+      params: { origin, destination },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Error while fetching trips"
+    );
+  }
+};
+
 const travelService = {
   getUnratedTrips,
+  getTravelsByOriginAndDestination,
 };
 
 export default travelService;

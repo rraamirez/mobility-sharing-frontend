@@ -10,5 +10,5 @@ export interface TravelModel {
   time: string; // ISO format (e.g., "12:00:00")
   price: number;
   createdAt: string; // ISO format (e.g., "2023-01-01T12:00:00")
-  travelRecurrence?: TravelRecurrence;
+  travelRecurrenceModel?: TravelRecurrence;
 }

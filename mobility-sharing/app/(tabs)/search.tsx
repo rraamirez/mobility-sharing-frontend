@@ -1,45 +1,99 @@
 import React, { useState } from "react";
-import { View, TextInput, FlatList, Text, StyleSheet } from "react-native";
+import {
+  View,
+  TextInput,
+  FlatList,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import travelService from "../services/travelService";
+import { TravelModel } from "../models/TravelModel";
 
 export default function Search() {
-  const [query, setQuery] = useState("");
-  const [results, setResults] = useState<string[]>([]);
+  const [origin, setOrigin] = useState("");
+  const [destination, setDestination] = useState("");
+  const [results, setResults] = useState<TravelModel[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSearch = (text: string) => {
-    setQuery(text);
+  const handleSearch = async () => {
+    if (!origin || !destination) return;
 
-    if (text) {
-      setResults([
-        `Result for "${text}" 1`,
-        `Result for "${text}" 2`,
-        `Result for "${text}" 3`,
-      ]);
-    } else {
-      setResults([]);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await travelService.getTravelsByOriginAndDestination(
+        origin.trim(),
+        destination.trim()
+      );
+      console.log("Search results:", data); // Debugging line
+      setResults(data);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
+      <Text style={styles.slogan}>Its your moment. Take the ride </Text>
+
       <TextInput
         style={styles.searchInput}
-        placeholder="Search..."
+        placeholder="Enter origin..."
         placeholderTextColor="#aaa"
-        value={query}
-        onChangeText={handleSearch}
+        value={origin}
+        onChangeText={setOrigin}
+        onSubmitEditing={handleSearch}
       />
+
+      <TextInput
+        style={styles.searchInput}
+        placeholder="Enter destination..."
+        placeholderTextColor="#aaa"
+        value={destination}
+        onChangeText={setDestination}
+        onSubmitEditing={handleSearch}
+      />
+
+      {loading && <ActivityIndicator size="large" color="#0DBF6F" />}
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
       <FlatList
         data={results}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
           <View style={styles.resultItem}>
-            <Ionicons name="search-outline" size={20} color="#fff" />
-            <Text style={styles.resultText}>{item}</Text>
+            <Ionicons name="car-outline" size={20} color="#fff" />
+            <View style={styles.resultInfo}>
+              <Text
+                style={styles.resultText}
+              >{`${item.origin} ➝ ${item.destination}`}</Text>
+              <Text
+                style={styles.driverText}
+              >{`👤 Driver: ${item.driver.name}`}</Text>
+              <Text
+                style={styles.priceText}
+              >{`💰 Price: ${item.price} Rupees `}</Text>
+              <Text
+                style={styles.dateText}
+              >{`📅 ${item.date} ⏰ ${item.time}`}</Text>
+              <Text style={styles.driverText}>{`🔁 Recurrent travel: ${
+                item.travelRecurrenceModel?.id ? "Yes :)" : "No :("
+              }`}</Text>
+            </View>
           </View>
         )}
         contentContainerStyle={styles.resultsContainer}
+        ListEmptyComponent={
+          !loading ? (
+            <Text style={styles.noResultsText}>No trips available</Text>
+          ) : null
+        }
       />
     </View>
   );
@@ -51,6 +105,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     padding: 20,
   },
+  slogan: {
+    color: "#FFF",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+  },
   searchInput: {
     height: 50,
     borderColor: "#fff",
@@ -58,7 +119,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 15,
     color: "#fff",
-    marginBottom: 20,
+    marginBottom: 15,
     fontSize: 16,
   },
   resultsContainer: {
@@ -72,8 +133,31 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderRadius: 8,
   },
+  resultInfo: {
+    marginLeft: 10,
+  },
   resultText: {
     color: "#fff",
-    marginLeft: 10,
+    fontWeight: "bold",
+  },
+  driverText: {
+    color: "#aaa",
+  },
+  priceText: {
+    color: "#FFD700",
+    fontWeight: "bold",
+  },
+  dateText: {
+    color: "#0DBF6F",
+  },
+  errorText: {
+    color: "red",
+    textAlign: "center",
+    marginBottom: 10,
+  },
+  noResultsText: {
+    color: "#888",
+    textAlign: "center",
+    marginTop: 20,
   },
 });
