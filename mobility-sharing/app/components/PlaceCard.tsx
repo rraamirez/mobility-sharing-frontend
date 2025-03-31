@@ -1,18 +1,30 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { PlaceCardProps } from "../models/PlaceCardModel";
 
 const PlaceCard = ({
-  name,
-  description,
-  latitude,
-  longitude,
+  name = "Unknown Place",
+  description = "No description available",
+  driver = "Unknown Driver",
+  date = "Unknown Date",
+  time = "Unknown Time",
+  price = 0,
+  latitude = 0,
+  longitude = 0,
+  enrolled = false,
 }: PlaceCardProps) => {
   return (
     <View style={styles.cardContainer}>
       <Text style={styles.placeName}>{name}</Text>
       <Text style={styles.placeDescription}>{description}</Text>
+
+      <View style={styles.detailsContainer}>
+        <Text style={styles.detailText}>🚗 Driver: {driver}</Text>
+        <Text style={styles.detailText}>📅 Date: {date}</Text>
+        <Text style={styles.detailText}>⏰ Time: {time}</Text>
+        <Text style={styles.detailText}>💰 Price: ${price}</Text>
+      </View>
 
       <View style={styles.mapContainer}>
         <MapView
@@ -20,13 +32,27 @@ const PlaceCard = ({
           initialRegion={{
             latitude,
             longitude,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
+            latitudeDelta: 0.05,
+            longitudeDelta: 0.05,
           }}
         >
           <Marker coordinate={{ latitude, longitude }} title={name} />
         </MapView>
       </View>
+
+      <TouchableOpacity
+        style={[
+          styles.button,
+          enrolled ? styles.cancelButton : styles.unenrollButton,
+        ]}
+        onPress={() => {
+          alert("TODO ");
+        }}
+      >
+        <Text style={styles.buttonText}>
+          {enrolled ? "Cancel Travel" : "Unenroll"}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -34,31 +60,68 @@ const PlaceCard = ({
 const styles = StyleSheet.create({
   cardContainer: {
     width: "90%",
-    marginBottom: 20,
-    backgroundColor: "#333",
-    borderRadius: 10,
+    backgroundColor: "#222",
+    borderRadius: 12,
     padding: 15,
+    marginBottom: 20,
     alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
   placeName: {
-    fontSize: 18,
-    color: "#fff",
+    fontSize: 20,
     fontWeight: "bold",
-    marginBottom: 10,
+    color: "#fff",
+    marginBottom: 8,
+    textAlign: "center",
   },
   placeDescription: {
     color: "#ccc",
+    fontSize: 14,
     textAlign: "center",
-    marginBottom: 10,
+    marginBottom: 12,
+  },
+  detailsContainer: {
+    alignItems: "flex-start",
+    width: "100%",
+    paddingLeft: 10,
+    marginBottom: 12,
+  },
+  detailText: {
+    color: "#fff",
+    fontSize: 14,
+    marginBottom: 4,
   },
   mapContainer: {
     width: "100%",
-    height: 200,
+    height: 150,
     borderRadius: 10,
     overflow: "hidden",
+    marginBottom: 10,
   },
   map: {
     flex: 1,
+  },
+  button: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 10,
+    alignItems: "center",
+  },
+  unenrollButton: {
+    backgroundColor: "#007bff",
+  },
+  cancelButton: {
+    backgroundColor: "#d9534f",
+  },
+  buttonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
   },
 });
 

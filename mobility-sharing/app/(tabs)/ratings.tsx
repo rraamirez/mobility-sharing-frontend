@@ -15,7 +15,6 @@ import travelService from "../services/travelService";
 import { RatingModel } from "../models/RatingModel";
 import RatingCard from "../components/RatingCard";
 import { TravelModel } from "../models/TravelModel";
-import { AirbnbRating } from "react-native-ratings";
 import Modal from "react-native-modal";
 import Icon from "react-native-vector-icons/FontAwesome";
 
@@ -35,6 +34,7 @@ export default function Ratings() {
     try {
       const fetchedUser = await userService.getMyUser();
       setUser(fetchedUser);
+      console.log("Fetched user:", fetchedUser);
 
       // // get travellsss
       const trips = await travelService.getUnratedTrips(fetchedUser.id);
@@ -50,10 +50,10 @@ export default function Ratings() {
       );
       setReceivedRatings(receivedRatings);
 
-      console.log("trips to rate:", trips);
+      console.log("trips to rate:", tripsToRate);
 
-      console.log("Rated trips:", ratedTrips);
-      console.log("Received ratings:", receivedRatings);
+      // console.log("Rated trips:", ratedTrips);
+      // console.log("Received ratings:", receivedRatings);
     } catch (error) {
       console.error("Error while fetching data:", error);
     }
@@ -65,21 +65,11 @@ export default function Ratings() {
     }, [])
   );
 
-  // Function to handle trip rating
-  const rateTrip = async (tripId: number) => {
-    try {
-      alert("Rating trip with id: " + tripId);
-      fetchUserData();
-    } catch (error) {
-      console.error("Error while rating trip:", error);
-    }
-  };
-
   const openRatingModal = (trip: TravelModel) => {
     setSelectedTrip(trip);
     setModalVisible(true);
 
-    console.log("Selected trip:", trip);
+    //console.log("Selected trip:", trip);
   };
 
   const submitRating = async () => {

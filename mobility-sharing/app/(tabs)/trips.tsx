@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -6,19 +6,54 @@ import {
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { logout } from "../services/authService";
 import PlaceCard from "../components/PlaceCard";
+import { TravelModel } from "../models/TravelModel";
+import userService from "../services/userService";
+import { UserModel } from "../models/Users";
+import travelService from "../services/travelService";
 
 export default function Trips() {
   const router = useRouter();
+  const [view, setView] = useState("driving");
+  const [user, setUser] = useState<UserModel | null>(null);
 
-  const handleLogout = async () => {
-    await logout();
-    router.replace("/");
+  const [myTrips, setMyTrips] = useState<TravelModel[]>([]);
+  const [enrolledTrips, setEnrolledTrips] = useState<TravelModel[]>([]);
+
+  const fetchUserData = async () => {
+    try {
+      const fetchedUser = await userService.getMyUser();
+      setUser(fetchedUser);
+      console.log("Fetched user:", fetchedUser);
+
+      // get travels
+      const trips = await travelService.getTravelsByDriver(fetchedUser.id);
+      setMyTrips(trips);
+
+      const enrolledTrips = await travelService.getEnrolledTravelsByUser(
+        fetchedUser.id
+      );
+      setEnrolledTrips(enrolledTrips);
+
+      console.log("My trips:", trips);
+      console.log("Enrolled trips:", enrolledTrips);
+    } catch (error) {
+      console.error("Error while fetching data:", error);
+    }
   };
 
-  const places = [
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserData();
+    }, [])
+  );
+
+  const latitude = 48.8584;
+  const longitude = 2.2945;
+
+  const drivingTrips = [
     {
       name: "Eiffel Tower",
       description: "A famous iron tower located in Paris, France.",
@@ -32,6 +67,9 @@ export default function Trips() {
       latitude: 40.4319,
       longitude: 116.5704,
     },
+  ];
+
+  const enrolledTripsData = [
     {
       name: "Machu Picchu",
       description:
@@ -43,16 +81,38 @@ export default function Trips() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Welcome to Trips</Text>
+      <Text style={styles.motto}>
+        "Shared journeys, better tomorrows. Every ride connects a story."
+      </Text>
+
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tabButton, view === "driving" && styles.activeTab]}
+          onPress={() => setView("driving")}
+        >
+          <Text style={styles.tabText}>Driving</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tabButton, view === "enrolled" && styles.activeTab]}
+          onPress={() => setView("enrolled")}
+        >
+          <Text style={styles.tabText}>Enrolled</Text>
+        </TouchableOpacity>
+      </View>
 
       <ScrollView style={styles.placesList}>
-        {places.map((place, index) => (
+        {(view === "driving" ? myTrips : enrolledTrips).map((place, index) => (
           <PlaceCard
             key={index}
-            name={place.name}
-            description={place.description}
-            latitude={place.latitude}
-            longitude={place.longitude}
+            name={place.origin + " ➝ " + place.destination}
+            description={place.time}
+            latitude={latitude}
+            longitude={longitude}
+            driver={place.driver.name}
+            date={place.date}
+            time={place.time}
+            price={place.price}
+            enrolled={view === "enrolled"}
           />
         ))}
       </ScrollView>
@@ -68,24 +128,36 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     paddingTop: 20,
   },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-    color: "#fff",
+  motto: {
+    fontSize: 16,
+    color: "#888",
+    marginBottom: 10,
+    textAlign: "center",
+    paddingHorizontal: 20,
   },
-  button: {
-    marginTop: 20,
-    backgroundColor: "#d9534f",
+  tabContainer: {
+    flexDirection: "row",
+    marginBottom: 20,
+    width: "100%",
+    justifyContent: "center",
+  },
+  tabButton: {
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
+    backgroundColor: "#444",
+    marginHorizontal: 10,
   },
-  buttonText: {
+  activeTab: {
+    backgroundColor: "#d9534f",
+  },
+  tabText: {
     color: "#fff",
-    fontSize: 16,
+    fontSize: 14,
   },
   placesList: {
     width: "100%",
     paddingHorizontal: 20,
+    marginLeft: 25,
   },
 });

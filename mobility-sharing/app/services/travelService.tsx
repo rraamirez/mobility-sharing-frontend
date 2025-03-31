@@ -16,7 +16,7 @@ export const getUnratedTrips = async (userId: number) => {
 
 export const getTravelsByOriginAndDestination = async (
   origin: string,
-  destination: string
+  destination: string | null
 ): Promise<TravelModel[]> => {
   try {
     const response = await api.get(`${API_URL}/origin-destination`, {
@@ -30,9 +30,33 @@ export const getTravelsByOriginAndDestination = async (
   }
 };
 
+export const getTravelsByDriver = async (driverId: number): Promise<TravelModel[]> => {
+  try {
+    const response = await api.get(`${API_URL}/driver/${driverId}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Error while fetching driver's trips"
+    );
+  }
+};
+
+export const getEnrolledTravelsByUser = async (userId: number): Promise<TravelModel[]> => {
+  try {
+    const response = await api.get(`${API_URL}/enrolled/${userId}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Error while fetching enrolled trips"
+    );
+  }
+};
+
 const travelService = {
   getUnratedTrips,
   getTravelsByOriginAndDestination,
+  getTravelsByDriver,
+  getEnrolledTravelsByUser,
 };
 
 export default travelService;

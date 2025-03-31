@@ -34,14 +34,15 @@ export default function Search() {
     try {
       const fetchedUser = await userService.getMyUser();
       setUser(fetchedUser);
-      console.log("Fetched user:", user);
+      console.log("Fetched user:", fetchUser);
     } catch (error) {
       console.error("Error while fetching user:", error);
     }
   };
 
   const handleSearch = async () => {
-    if (!origin || !destination) return;
+    console.log(user);
+    if (!origin) return;
 
     setLoading(true);
     setError(null);
@@ -49,7 +50,7 @@ export default function Search() {
     try {
       const data = await travelService.getTravelsByOriginAndDestination(
         origin.trim(),
-        destination.trim()
+        destination.trim() || null
       );
       setResults(data);
     } catch (err: any) {
