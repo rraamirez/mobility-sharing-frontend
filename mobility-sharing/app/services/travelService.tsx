@@ -52,11 +52,35 @@ export const getEnrolledTravelsByUser = async (userId: number): Promise<TravelMo
   }
 };
 
+export const createTravel = async (travel: any) => { 
+  try {
+    const response = await api.post(`${API_URL}/`, travel);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Error while creating travel"
+    );
+  }
+}
+
+export const createRecurrentTravel = async (travel: any) => { 
+  try {
+    const response = await api.post(`${API_URL}/recurrent-travel`, travel);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Error while creating travel"
+    );
+  }
+}
+
 const travelService = {
   getUnratedTrips,
   getTravelsByOriginAndDestination,
   getTravelsByDriver,
   getEnrolledTravelsByUser,
+  createTravel,
+  createRecurrentTravel,
 };
 
 export default travelService;
