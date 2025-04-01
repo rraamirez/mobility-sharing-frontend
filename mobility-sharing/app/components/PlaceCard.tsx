@@ -50,7 +50,7 @@ const PlaceCard = ({
         }}
       >
         <Text style={styles.buttonText}>
-          {enrolled ? "Cancel Travel" : "Unenroll"}
+          {enrolled ? "Unenroll" : "Cancel Travel"}
         </Text>
       </TouchableOpacity>
     </View>
