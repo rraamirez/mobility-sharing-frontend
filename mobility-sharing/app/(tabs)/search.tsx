@@ -14,7 +14,7 @@ import { TravelModel } from "../models/TravelModel";
 import { UserModel } from "../models/Users";
 import userService from "../services/userService";
 import userTravelService from "../services/userTravelService";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 export default function Search() {
   const [origin, setOrigin] = useState("");
@@ -23,6 +23,7 @@ export default function Search() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<UserModel | null>(null);
+  const router = useRouter();
 
   useFocusEffect(
     useCallback(() => {
@@ -60,6 +61,7 @@ export default function Search() {
     }
   };
 
+
   const bookTravel = async (travelId: number): Promise<void> => {
     if (!user) {
       console.error("User not found. Cannot book travel.");
@@ -70,6 +72,14 @@ export default function Search() {
       return;
     }
     const data = await userTravelService.bookTravel(travelId, user!.id);
+    if (!data) {
+      console.error("Failed to book travel.");
+      return;
+    } else {
+      alert("Travel booked successfully!");
+      router.replace("/trips");
+    }
+
     console.log("Booking response:", data);
   };
 

@@ -82,53 +82,11 @@ export default function Publish() {
     }));
 
     if (isRecurring) {
-      console.log("Creating recurrent travel with data:", payload);
-      try {
-        const response = await travelService.createRecurrentTravel(payload);
-        if (response.status >= 200 && response.status < 300) {
-          console.log("Recurrent travel response:", response.data);
-          router.replace("/trips");
-        } else {
-          console.error(
-            "Failed to create recurrent travel, status:",
-            response.status,
-            response.data
-          );
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error(
-            "Error while creating recurrent travel:",
-            (error as any).response?.data || error.message
-          );
-        } else {
-          console.error("Unexpected error:", error);
-        }
-      }
+      await travelService.createRecurrentTravel(payload);
     } else {
-      console.log("Creating travel with data:", payload[0]);
-      try {
-        const response = await travelService.createTravel(payload[0]);
-        if (response.status >= 200 && response.status < 300) {
-          router.replace("/trips");
-        } else {
-          console.error(
-            "Failed to create travel, status:",
-            response.status,
-            response.data
-          );
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error(
-            "Error while creating travel:",
-            (error as any).response?.data || error.message
-          );
-        } else {
-          console.error("Unexpected error:", error);
-        }
-      }
+      await travelService.createTravel(payload[0]);
     }
+    router.replace("/trips");
   };
 
   return (
