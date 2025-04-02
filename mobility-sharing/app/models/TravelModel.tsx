@@ -11,4 +11,9 @@ export interface TravelModel {
   price: number;
   createdAt: string; // ISO format (e.g., "2023-01-01T12:00:00")
   travelRecurrenceModel?: TravelRecurrence;
+  latitudeOrigin?: number;
+  longitudeOrigin?: number;
+  latitudeDestination?: number;
+  longitudeDestination?: number;
+  status: "ACTIVE" | "INACTIVE" | "CANCELLED"; // Enum values from TravelStatus
 }
