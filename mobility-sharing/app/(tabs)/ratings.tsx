@@ -147,6 +147,7 @@ export default function Ratings() {
                 <Text
                   style={styles.cardText}
                 >{`Date: ${item.driver.name}`}</Text>
+                <Text style={styles.cardText}>{`Status: ${item.status}`}</Text>
                 <TouchableOpacity
                   style={styles.rateButton}
                   onPress={() => openRatingModal(item)}

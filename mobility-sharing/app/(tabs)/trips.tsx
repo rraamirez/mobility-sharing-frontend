@@ -1,3 +1,5 @@
+// En el componente Trips
+
 import React, { useCallback, useState } from "react";
 import {
   View,
@@ -5,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { logout } from "../services/authService";
@@ -22,13 +25,14 @@ export default function Trips() {
   const [myTrips, setMyTrips] = useState<TravelModel[]>([]);
   const [enrolledTrips, setEnrolledTrips] = useState<TravelModel[]>([]);
 
+  // Función para obtener los datos del usuario
   const fetchUserData = async () => {
     try {
       const fetchedUser = await userService.getMyUser();
       setUser(fetchedUser);
       console.log("Fetched user:", fetchedUser);
 
-      // get travels
+      // Obtener viajes del conductor
       const trips = await travelService.getTravelsByDriver(fetchedUser.id);
       setMyTrips(trips);
 
@@ -104,6 +108,7 @@ export default function Trips() {
         {(view === "driving" ? myTrips : enrolledTrips).map((place, index) => (
           <PlaceCard
             key={index}
+            id={place.id}
             name={place.origin + " ➝ " + place.destination}
             description={place.time}
             latitude={latitude}
@@ -113,6 +118,8 @@ export default function Trips() {
             time={place.time}
             price={place.price}
             enrolled={view === "enrolled"}
+            status={place.status}
+            fetchUserData={fetchUserData}
           />
         ))}
       </ScrollView>

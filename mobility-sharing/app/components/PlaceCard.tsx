@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { PlaceCardProps } from "../models/PlaceCardModel";
+import travelService from "../services/travelService";
 
 const PlaceCard = ({
+  id,
   name = "Unknown Place",
   description = "No description available",
   driver = "Unknown Driver",
@@ -13,11 +15,25 @@ const PlaceCard = ({
   latitude = 0,
   longitude = 0,
   enrolled = false,
+  status = "ACTIVE",
+  fetchUserData, 
 }: PlaceCardProps) => {
   const [mapVisible, setMapVisible] = useState(false);
 
   const toggleMapVisibility = () => {
     setMapVisible((prevState) => !prevState);
+  };
+
+  const handleCancel = async (travelId: number) => {
+    travelService
+      .cancelTravel(travelId)
+      .then((response) => {
+        Alert.alert("Success", "Travel has been canceled.");
+        if (fetchUserData) fetchUserData(); // Llamar a la función del padre para hacer el fetch
+      })
+      .catch((error) => {
+        Alert.alert("Error", error.message);
+      });
   };
 
   return (
@@ -30,6 +46,7 @@ const PlaceCard = ({
         <Text style={styles.detailText}>📅 Date: {date}</Text>
         <Text style={styles.detailText}>⏰ Time: {time}</Text>
         <Text style={styles.detailText}>💰 Price: {price} rupees</Text>
+        <Text style={styles.detailText}>Status : {status}</Text>
       </View>
 
       {mapVisible && (
@@ -60,21 +77,38 @@ const PlaceCard = ({
         <TouchableOpacity
           style={[
             styles.button,
-            enrolled ? styles.cancelButton : styles.unenrollButton,
+            status === "CANCELED"
+              ? styles.showMapButton
+              : enrolled
+              ? styles.cancelButton
+              : styles.unenrollButton,
           ]}
           onPress={() => {
-            alert("TODO ");
+            if (status === "CANCELED") {
+              Alert.alert("Info", "This travel has been canceled.");
+            } else if (!enrolled) {
+              if (id !== undefined) {
+                handleCancel(id);
+              } else {
+                Alert.alert("Error", "Travel ID is undefined.");
+              }
+            } else {
+              alert("You are not enrolled in this trip.");
+            }
           }}
         >
           <Text style={styles.buttonText}>
-            {enrolled ? "Unenroll" : "Cancel Travel"}
+            {status === "CANCELED"
+              ? "Cancelled"
+              : enrolled
+              ? "Unenroll"
+              : "Cancel Travel"}
           </Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 };
-
 const styles = StyleSheet.create({
   cardContainer: {
     width: "90%",

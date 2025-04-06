@@ -74,6 +74,28 @@ export const createRecurrentTravel = async (travel: any) => {
   }
 }
 
+export const cancelTravel = async (id: number) => {
+  try {
+    const response = await api.put(`${API_URL}/cancel-travel/${id}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Error while canceling travel"
+    );
+  }
+};
+
+export const completeTravel = async (id: number) => {
+  try {
+    const response = await api.put(`${API_URL}/complete-travel/${id}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Error while completing travel"
+    );
+  }
+};
+
 const travelService = {
   getUnratedTrips,
   getTravelsByOriginAndDestination,
@@ -81,6 +103,8 @@ const travelService = {
   getEnrolledTravelsByUser,
   createTravel,
   createRecurrentTravel,
+  cancelTravel,
+  completeTravel,
 };
 
 export default travelService;

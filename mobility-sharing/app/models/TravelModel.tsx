@@ -15,5 +15,5 @@ export interface TravelModel {
   longitudeOrigin?: number;
   latitudeDestination?: number;
   longitudeDestination?: number;
-  status: "ACTIVE" | "INACTIVE" | "CANCELLED"; // Enum values from TravelStatus
+  status: "ACTIVE" | "COMPLETED" | "CANCELED"; // Enum values from TravelStatus
 }
