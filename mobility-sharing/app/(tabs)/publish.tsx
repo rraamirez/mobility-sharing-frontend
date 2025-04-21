@@ -14,6 +14,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import userService from "../services/userService";
 import { UserModel } from "../models/Users";
 import travelService from "../services/travelService";
+import MapView, { Marker } from "react-native-maps";
 
 export default function Publish() {
   const [origin, setOrigin] = useState("");
@@ -29,6 +30,94 @@ export default function Publish() {
   const [user, setUser] = useState<UserModel | null>(null);
 
   const router = useRouter();
+
+  // Coordinates:
+  const [address, setAddress] = useState("");
+  const [arrivalAddress, setArrivalAddress] = useState("");
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [arrivalCoordinates, setArrivalCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const fetchCoordinates = async () => {
+    if (!address || !arrivalAddress) {
+      alert("Please enter both addresses");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Call to Nominatim API for the origin address
+
+      console.log("Fetching coordinates for:", address, arrivalAddress);
+      const responseOrigin = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          address
+        )}`,
+        {
+          headers: {
+            "User-Agent": "MyApp/1.0 (myemail@example.com)", // Your own User-Agent
+          },
+        }
+      );
+
+      // Call to Nominatim API for the arrival address
+      const responseArrival = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          arrivalAddress
+        )}`,
+        {
+          headers: {
+            "User-Agent": "MyApp/1.0 (myemail@example.com)", // Your own User-Agent
+          },
+        }
+      );
+
+      const dataOrigin = await responseOrigin.json();
+      const dataArrival = await responseArrival.json();
+
+      if (dataOrigin.length > 0) {
+        // Get the coordinates of the first result for the origin address
+        const latOrigin = parseFloat(dataOrigin[0].lat);
+        const lonOrigin = parseFloat(dataOrigin[0].lon);
+        setCoordinates({ latitude: latOrigin, longitude: lonOrigin });
+      } else {
+        alert("Origin address not found.");
+        setCoordinates(null);
+      }
+
+      if (dataArrival.length > 0) {
+        // Get the coordinates of the first result for the arrival address
+        const latArrival = parseFloat(dataArrival[0].lat);
+        const lonArrival = parseFloat(dataArrival[0].lon);
+        setArrivalCoordinates({ latitude: latArrival, longitude: lonArrival });
+      } else {
+        alert("Arrival address not found.");
+        setArrivalCoordinates(null);
+      }
+
+      console.log("Origin coordinates:", coordinates);
+      console.log("Arrival coordinates:", arrivalCoordinates);
+    } catch (error) {
+      alert("Error fetching coordinates");
+    }
+    setLoading(false);
+  };
+
+  const [isFullScreen, setIsFullScreen] = useState(false);
+
+  const toggleFullScreen = () => {
+    setIsFullScreen((prev) => !prev);
+  };
+
+  const mapStyle = isFullScreen
+    ? { flex: 1, width: "100%", height: "100%", borderRadius: 5 }
+    : { flex: 1, marginTop: 20, width: "100%", borderRadius: 5 };
 
   useFocusEffect(
     useCallback(() => {
@@ -79,6 +168,10 @@ export default function Publish() {
       date,
       time,
       price: Number(price),
+      latitudeOrigin: coordinates?.latitude ?? null,
+      longitudeOrigin: coordinates?.longitude ?? null,
+      latitudeDestination: arrivalCoordinates?.latitude ?? null,
+      longitudeDestination: arrivalCoordinates?.longitude ?? null,
     }));
 
     if (isRecurring) {
@@ -117,6 +210,65 @@ export default function Publish() {
         value={price}
         onChangeText={setPrice}
       />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Example: Calle Cerro del Oro 60, Granada"
+        value={address}
+        onChangeText={setAddress}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Example: Calle Cerro del Oro 60, Granada"
+        value={arrivalAddress}
+        onChangeText={setArrivalAddress}
+      />
+
+      <TouchableOpacity style={styles.button} onPress={fetchCoordinates}>
+        <Text style={styles.buttonText}>Get Coordinates</Text>
+      </TouchableOpacity>
+
+      {/* Show a loading message while fetching coordinates */}
+      {loading && <Text style={styles.loadingText}>Loading...</Text>}
+
+      <TouchableOpacity onPress={toggleFullScreen} style={styles.button}>
+        <Text style={styles.buttonText}>
+          {isFullScreen ? "Exit Full Screen" : "View Full Screen Map"}
+        </Text>
+      </TouchableOpacity>
+
+      {/* Show the map if coordinates are found */}
+      {coordinates && (
+        <MapView
+          style={[
+            styles.map, // Basic style
+            isFullScreen
+              ? { flex: 1, width: "100%", height: "100%" }
+              : { height: 300 }, // Condition to change size
+          ]}
+          initialRegion={{
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude,
+            latitudeDelta: 0.1,
+            longitudeDelta: 0.1,
+          }}
+        >
+          <Marker
+            coordinate={coordinates}
+            title="Location"
+            description={address}
+            pinColor="blue"
+          />
+          {arrivalCoordinates && (
+            <Marker
+              coordinate={arrivalCoordinates}
+              title="Location"
+              description={arrivalAddress}
+            />
+          )}
+        </MapView>
+      )}
 
       <Switch value={isRecurring} onValueChange={setIsRecurring} />
       <Text style={styles.label}>
@@ -235,5 +387,17 @@ const styles = StyleSheet.create({
   buttonText: {
     color: "#fff",
     fontSize: 16,
+  },
+  map: {
+    flex: 1,
+    marginTop: 20,
+    width: "100%",
+    borderRadius: 5,
+  },
+  loadingText: {
+    textAlign: "center",
+    marginTop: 10,
+    fontSize: 16,
+    color: "blue",
   },
 });

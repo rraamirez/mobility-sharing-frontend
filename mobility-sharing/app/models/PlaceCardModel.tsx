@@ -6,8 +6,10 @@ export interface PlaceCardProps {
   date?: string;
   time?: string;
   price?: number;
-  latitude?: number;
-  longitude?: number;
+  latitudeOrigin?: number;
+  longitudeOrigin?: number;
+  latitudeDestination?: number;
+  longitudeDestination?: number;
   enrolled?: boolean;
   status?: "ACTIVE" | "COMPLETED" | "CANCELED"; // Enum values from TravelStatus
   fetchUserData: () => Promise<void>;

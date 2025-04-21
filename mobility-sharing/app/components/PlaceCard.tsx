@@ -12,11 +12,13 @@ const PlaceCard = ({
   date = "Unknown Date",
   time = "Unknown Time",
   price = 0,
-  latitude = 0,
-  longitude = 0,
+  latitudeOrigin = 0,
+  longitudeOrigin = 0,
+  latitudeDestination = 0,
+  longitudeDestination = 0,
   enrolled = false,
   status = "ACTIVE",
-  fetchUserData, 
+  fetchUserData,
 }: PlaceCardProps) => {
   const [mapVisible, setMapVisible] = useState(false);
 
@@ -54,13 +56,27 @@ const PlaceCard = ({
           <MapView
             style={styles.map}
             initialRegion={{
-              latitude,
-              longitude,
+              latitude: latitudeOrigin,
+              longitude: longitudeOrigin,
               latitudeDelta: 0.05,
               longitudeDelta: 0.05,
             }}
           >
-            <Marker coordinate={{ latitude, longitude }} title={name} />
+            <Marker
+              coordinate={{
+                latitude: latitudeOrigin,
+                longitude: longitudeOrigin,
+              }}
+              title={name}
+              pinColor="blue"
+            />
+            <Marker
+              coordinate={{
+                latitude: latitudeDestination,
+                longitude: longitudeDestination,
+              }}
+              title={name}
+            />
           </MapView>
         </View>
       )}
@@ -69,9 +85,30 @@ const PlaceCard = ({
         <TouchableOpacity
           onPress={toggleMapVisibility}
           style={[styles.button, styles.showMapButton]}
+          disabled={
+            latitudeOrigin === 0 ||
+            longitudeOrigin === 0 ||
+            latitudeDestination === 0 ||
+            longitudeDestination === 0 ||
+            latitudeOrigin === null ||
+            longitudeOrigin === null ||
+            latitudeDestination === null ||
+            longitudeDestination === null
+          }
         >
           <Text style={styles.buttonText}>
-            {mapVisible ? "Hide Map" : "Show Map"}
+            {latitudeOrigin === 0 ||
+            longitudeOrigin === 0 ||
+            latitudeDestination === 0 ||
+            longitudeDestination === 0 ||
+            latitudeOrigin === null ||
+            longitudeOrigin === null ||
+            latitudeDestination === null ||
+            longitudeDestination === null
+              ? "Map Disabled"
+              : mapVisible
+              ? "Hide Map"
+              : "Show Map"}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity

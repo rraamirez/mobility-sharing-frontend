@@ -111,8 +111,10 @@ export default function Trips() {
             id={place.id}
             name={place.origin + " ➝ " + place.destination}
             description={place.time}
-            latitude={latitude}
-            longitude={longitude}
+            latitudeOrigin={place.latitudeOrigin}
+            longitudeOrigin={place.longitudeOrigin}
+            latitudeDestination={place.latitudeDestination}
+            longitudeDestination={place.longitudeDestination}
             driver={place.driver.name}
             date={place.date}
             time={place.time}
