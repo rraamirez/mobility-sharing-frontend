@@ -323,7 +323,17 @@ export default function Publish() {
         </View>
       </Modal>
 
-      <Switch value={isRecurring} onValueChange={setIsRecurring} />
+      <Switch
+        value={isRecurring}
+        onValueChange={setIsRecurring}
+        trackColor={{ false: "gray", true: "gray" }}
+        thumbColor={isRecurring ? "blue" : "white"}
+        ios_backgroundColor="#555"
+        style={{
+          marginVertical: 10,
+          transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }],
+        }}
+      />
       <Text style={styles.label}>
         {isRecurring ? "Recurring Trip" : "One-time Trip"}
       </Text>
