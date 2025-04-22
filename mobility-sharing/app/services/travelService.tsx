@@ -17,7 +17,7 @@ export const getUnratedTrips = async (userId: number) => {
 export const getTravelsByOriginAndDestination = async (
   origin: string,
   destination: string | null
-): Promise<TravelModel[]> => {
+): Promise<TravelModel[][]> => {
   try {
     const response = await api.get(`${API_URL}/origin-destination`, {
       params: { origin, destination },
@@ -30,7 +30,9 @@ export const getTravelsByOriginAndDestination = async (
   }
 };
 
-export const getTravelsByDriver = async (driverId: number): Promise<TravelModel[]> => {
+export const getTravelsByDriver = async (
+  driverId: number
+): Promise<TravelModel[]> => {
   try {
     const response = await api.get(`${API_URL}/driver/${driverId}`);
     return response.data;
@@ -41,7 +43,9 @@ export const getTravelsByDriver = async (driverId: number): Promise<TravelModel[
   }
 };
 
-export const getEnrolledTravelsByUser = async (userId: number): Promise<TravelModel[]> => {
+export const getEnrolledTravelsByUser = async (
+  userId: number
+): Promise<TravelModel[]> => {
   try {
     const response = await api.get(`${API_URL}/enrolled/${userId}`);
     return response.data;
@@ -52,7 +56,7 @@ export const getEnrolledTravelsByUser = async (userId: number): Promise<TravelMo
   }
 };
 
-export const createTravel = async (travel: any) => { 
+export const createTravel = async (travel: any) => {
   try {
     const response = await api.post(`${API_URL}/`, travel);
     return response.data;
@@ -61,9 +65,9 @@ export const createTravel = async (travel: any) => {
       error.response?.data?.message || "Error while creating travel"
     );
   }
-}
+};
 
-export const createRecurrentTravel = async (travel: any) => { 
+export const createRecurrentTravel = async (travel: any) => {
   try {
     const response = await api.post(`${API_URL}/recurrent-travel`, travel);
     return response.data;
@@ -72,7 +76,7 @@ export const createRecurrentTravel = async (travel: any) => {
       error.response?.data?.message || "Error while creating travel"
     );
   }
-}
+};
 
 export const cancelTravel = async (id: number) => {
   try {

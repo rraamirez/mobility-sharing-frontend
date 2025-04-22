@@ -19,7 +19,8 @@ import { useFocusEffect, useRouter } from "expo-router";
 export default function Search() {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  const [results, setResults] = useState<TravelModel[]>([]);
+  const [results, setResults] = useState<TravelModel[][]>([]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<UserModel | null>(null);
@@ -35,7 +36,7 @@ export default function Search() {
     try {
       const fetchedUser = await userService.getMyUser();
       setUser(fetchedUser);
-      console.log("Fetched user:", fetchUser);
+      //console.log("Fetched user:", fetchUser);
     } catch (error) {
       console.error("Error while fetching user:", error);
     }
@@ -53,6 +54,7 @@ export default function Search() {
         origin.trim(),
         destination.trim() || null
       );
+      console.log("Search results:", data);
       setResults(data);
     } catch (err: any) {
       setError(err.message);
@@ -60,7 +62,6 @@ export default function Search() {
       setLoading(false);
     }
   };
-
 
   const bookTravel = async (travelId: number): Promise<void> => {
     if (!user) {
@@ -80,7 +81,21 @@ export default function Search() {
       router.replace("/trips");
     }
 
-    console.log("Booking response:", data);
+    //console.log("Booking response:", data);
+  };
+
+  const [expandedGroups, setExpandedGroups] = useState(new Set<number>());
+
+  const toggleGroup = (index: number) => {
+    setExpandedGroups((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
   };
 
   return (
@@ -110,44 +125,54 @@ export default function Search() {
 
       <FlatList
         data={results}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.resultItem}>
-            <Ionicons name="car-outline" size={24} color="#fff" />
-            <View style={styles.resultInfo}>
-              <Text style={styles.resultText}>
-                {`${item.origin} ➝ ${item.destination}`}
+        keyExtractor={(_, index) => `group-${index}`}
+        renderItem={({ item: group, index: groupIndex }) => (
+          <View>
+            <TouchableOpacity onPress={() => toggleGroup(groupIndex)}>
+              <Text style={styles.groupHeader}>
+                {`Group ${groupIndex + 1}`}{" "}
+                {expandedGroups.has(groupIndex) ? "▲" : "▼"}
               </Text>
-              <Text
-                style={styles.driverText}
-              >{`👤 Driver: ${item.driver.name}`}</Text>
-              <Text style={styles.priceText}>{`💰 ${item.price} Rupees`}</Text>
-              <Text
-                style={styles.dateText}
-              >{`📅 ${item.date} ⏰ ${item.time}`}</Text>
-              <Text style={styles.recurrenceText}>
-                {`🔁 Recurrent travel: ${
-                  item.travelRecurrenceModel?.id ? "Yes" : "No"
-                }`}
-              </Text>
-            </View>
+            </TouchableOpacity>
 
-            <View>
-              <TouchableOpacity
-                style={styles.bookButton}
-                onPress={() => bookTravel(item.id)}
-              >
-                <Text style={styles.bookButtonText}>Book Now</Text>
-              </TouchableOpacity>
-            </View>
+            {expandedGroups.has(groupIndex) && (
+              <FlatList
+                data={group}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <View style={styles.resultItem}>
+                    <Ionicons name="car-outline" size={24} color="#fff" />
+                    <View style={styles.resultInfo}>
+                      <Text style={styles.resultText}>
+                        {`${item.origin} ➝ ${item.destination}`}
+                      </Text>
+                      <Text
+                        style={styles.driverText}
+                      >{`👤 Driver: ${item.driver.name}`}</Text>
+                      <Text
+                        style={styles.priceText}
+                      >{`💰 ${item.price} Rupees`}</Text>
+                      <Text
+                        style={styles.dateText}
+                      >{`📅 ${item.date} ⏰ ${item.time}`}</Text>
+                      <Text style={styles.recurrenceText}>
+                        {`🔁 Recurrent travel: ${
+                          item.travelRecurrenceModel?.id ? "Yes" : "No"
+                        }`}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.bookButton}
+                      onPress={() => bookTravel(item.id)}
+                    >
+                      <Text style={styles.bookButtonText}>Book Now</Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              />
+            )}
           </View>
         )}
-        contentContainerStyle={styles.resultsContainer}
-        ListEmptyComponent={
-          !loading ? (
-            <Text style={styles.noResultsText}>No trips available</Text>
-          ) : null
-        }
       />
     </View>
   );
@@ -228,5 +253,14 @@ const styles = StyleSheet.create({
     color: "#888",
     textAlign: "center",
     marginTop: 20,
+  },
+  groupHeader: {
+    color: "#0DBF6F",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#555",
+    paddingBottom: 4,
   },
 });
