@@ -7,7 +7,9 @@ import {
   TextInput,
   Switch,
   Platform,
-  FlatList,
+  Modal,
+  ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -31,7 +33,6 @@ export default function Publish() {
 
   const router = useRouter();
 
-  // Coordinates:
   const [address, setAddress] = useState("");
   const [arrivalAddress, setArrivalAddress] = useState("");
   const [coordinates, setCoordinates] = useState<{
@@ -43,8 +44,13 @@ export default function Publish() {
     longitude: number;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
 
   const fetchCoordinates = async () => {
+    setCoordinates(null);
+    setArrivalCoordinates(null);
+    setShowMapModal(false);
+
     if (!address || !arrivalAddress) {
       alert("Please enter both addresses");
       return;
@@ -52,76 +58,56 @@ export default function Publish() {
 
     setLoading(true);
     try {
-      // Call to Nominatim API for the origin address
-
-      console.log("Fetching coordinates for:", address, arrivalAddress);
       const responseOrigin = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           address
         )}`,
-        {
-          headers: {
-            "User-Agent": "MyApp/1.0 (myemail@example.com)", // Your own User-Agent
-          },
-        }
+        { headers: { "User-Agent": "MyApp/1.0 (myemail@example.com)" } }
       );
-
-      // Call to Nominatim API for the arrival address
       const responseArrival = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           arrivalAddress
         )}`,
-        {
-          headers: {
-            "User-Agent": "MyApp/1.0 (myemail@example.com)", // Your own User-Agent
-          },
-        }
+        { headers: { "User-Agent": "MyApp/1.0 (myemail@example.com)" } }
       );
-
       const dataOrigin = await responseOrigin.json();
       const dataArrival = await responseArrival.json();
 
       if (dataOrigin.length > 0) {
-        // Get the coordinates of the first result for the origin address
         const latOrigin = parseFloat(dataOrigin[0].lat);
         const lonOrigin = parseFloat(dataOrigin[0].lon);
         setCoordinates({ latitude: latOrigin, longitude: lonOrigin });
-      } else {
-        alert("Origin address not found.");
-        setCoordinates(null);
-      }
+      } else alert("Origin address not found.");
 
       if (dataArrival.length > 0) {
-        // Get the coordinates of the first result for the arrival address
         const latArrival = parseFloat(dataArrival[0].lat);
         const lonArrival = parseFloat(dataArrival[0].lon);
         setArrivalCoordinates({ latitude: latArrival, longitude: lonArrival });
-      } else {
-        alert("Arrival address not found.");
-        setArrivalCoordinates(null);
-      }
-
-      console.log("Origin coordinates:", coordinates);
-      console.log("Arrival coordinates:", arrivalCoordinates);
+      } else alert("Arrival address not found.");
     } catch (error) {
       alert("Error fetching coordinates");
     }
     setLoading(false);
   };
 
-  const [isFullScreen, setIsFullScreen] = useState(false);
-
-  const toggleFullScreen = () => {
-    setIsFullScreen((prev) => !prev);
-  };
-
-  const mapStyle = isFullScreen
-    ? { flex: 1, width: "100%", height: "100%", borderRadius: 5 }
-    : { flex: 1, marginTop: 20, width: "100%", borderRadius: 5 };
-
   useFocusEffect(
     useCallback(() => {
       fetchUser();
+      return () => {
+        setOrigin("");
+        setDestination("");
+        setPrice("");
+        setStartDate(null);
+        setEndDate(null);
+        setTime(null);
+        setIsRecurring(false);
+        setAddress("");
+        setArrivalAddress("");
+        setCoordinates(null);
+        setArrivalCoordinates(null);
+        setShowMapModal(false);
+        setShowPicker(null);
+      };
     }, [])
   );
 
@@ -161,29 +147,43 @@ export default function Publish() {
       ? generateDateRange(startDate!, endDate!)
       : [startDate!.toISOString().split("T")[0]];
 
-    const payload = dates.map((date) => ({
-      driver: { id: user?.id ?? null },
-      origin,
-      destination,
-      date,
-      time,
-      price: Number(price),
-      latitudeOrigin: coordinates?.latitude ?? null,
-      longitudeOrigin: coordinates?.longitude ?? null,
-      latitudeDestination: arrivalCoordinates?.latitude ?? null,
-      longitudeDestination: arrivalCoordinates?.longitude ?? null,
-    }));
+    const payload = dates.map((date) => {
+      const trip: any = {
+        driver: { id: user?.id ?? null },
+        origin,
+        destination,
+        date,
+        time,
+        price: Number(price),
+      };
 
-    if (isRecurring) {
-      await travelService.createRecurrentTravel(payload);
-    } else {
-      await travelService.createTravel(payload[0]);
-    }
+      // include coordinates only if all four are available
+      if (
+        coordinates?.latitude != null &&
+        coordinates?.longitude != null &&
+        arrivalCoordinates?.latitude != null &&
+        arrivalCoordinates?.longitude != null
+      ) {
+        trip.latitudeOrigin = coordinates.latitude;
+        trip.longitudeOrigin = coordinates.longitude;
+        trip.latitudeDestination = arrivalCoordinates.latitude;
+        trip.longitudeDestination = arrivalCoordinates.longitude;
+      }
+
+      return trip;
+    });
+
+    if (isRecurring) await travelService.createRecurrentTravel(payload);
+    else await travelService.createTravel(payload[0]);
+
     router.replace("/trips");
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.scrollContainer}
+      contentContainerStyle={styles.container}
+    >
       <Text style={styles.title}>Post a Trip</Text>
 
       <TextInput
@@ -211,64 +211,117 @@ export default function Publish() {
         onChangeText={setPrice}
       />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Example: Calle Cerro del Oro 60, Granada"
-        value={address}
-        onChangeText={setAddress}
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Example: Calle Cerro del Oro 60, Granada"
-        value={arrivalAddress}
-        onChangeText={setArrivalAddress}
-      />
-
-      <TouchableOpacity style={styles.button} onPress={fetchCoordinates}>
-        <Text style={styles.buttonText}>Get Coordinates</Text>
-      </TouchableOpacity>
-
-      {/* Show a loading message while fetching coordinates */}
-      {loading && <Text style={styles.loadingText}>Loading...</Text>}
-
-      <TouchableOpacity onPress={toggleFullScreen} style={styles.button}>
-        <Text style={styles.buttonText}>
-          {isFullScreen ? "Exit Full Screen" : "View Full Screen Map"}
-        </Text>
-      </TouchableOpacity>
-
-      {/* Show the map if coordinates are found */}
-      {coordinates && (
-        <MapView
-          style={[
-            styles.map, // Basic style
-            isFullScreen
-              ? { flex: 1, width: "100%", height: "100%" }
-              : { height: 300 }, // Condition to change size
-          ]}
-          initialRegion={{
-            latitude: coordinates.latitude,
-            longitude: coordinates.longitude,
-            latitudeDelta: 0.1,
-            longitudeDelta: 0.1,
+      <View style={styles.row}>
+        <TextInput
+          style={[styles.input, styles.flex]}
+          placeholder="Example: Calle Cerro del Oro 60, Granada"
+          value={address}
+          onChangeText={setAddress}
+        />
+        <TouchableOpacity
+          style={styles.resetButton}
+          onPress={() => {
+            setAddress("");
+            setCoordinates(null);
           }}
         >
-          <Marker
-            coordinate={coordinates}
-            title="Location"
-            description={address}
-            pinColor="blue"
-          />
-          {arrivalCoordinates && (
-            <Marker
-              coordinate={arrivalCoordinates}
-              title="Location"
-              description={arrivalAddress}
-            />
-          )}
-        </MapView>
+          <Text style={styles.resetButtonText}>Reset</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.row}>
+        <TextInput
+          style={[styles.input, styles.flex]}
+          placeholder="Example: Calle Cerro del Oro 60, Granada"
+          value={arrivalAddress}
+          onChangeText={setArrivalAddress}
+        />
+        <TouchableOpacity
+          style={styles.resetButton}
+          onPress={() => {
+            setArrivalAddress("");
+            setArrivalCoordinates(null);
+          }}
+        >
+          <Text style={styles.resetButtonText}>Reset</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.mapControls}>
+        <TouchableOpacity style={styles.mapButton} onPress={fetchCoordinates}>
+          <Text style={styles.buttonText}>Get Coordinates</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.mapButton}
+          onPress={() => {
+            if (!coordinates || !arrivalCoordinates) {
+              alert("Please get coordinates first");
+              return;
+            }
+            setShowMapModal(true);
+          }}
+        >
+          <Text style={styles.mapButtonText}>Explore Fullscreen Map</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading && (
+        <ActivityIndicator size="large" color="#007AFF" style={styles.loader} />
       )}
+
+      {coordinates && (
+        <View style={styles.mapContainer}>
+          <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: coordinates.latitude,
+              longitude: coordinates.longitude,
+              latitudeDelta: 0.1,
+              longitudeDelta: 0.1,
+            }}
+          >
+            <Marker
+              coordinate={coordinates}
+              title="Origin"
+              description={address}
+              pinColor="blue"
+            />
+            {arrivalCoordinates && (
+              <Marker
+                coordinate={arrivalCoordinates}
+                title="Destination"
+                description={arrivalAddress}
+              />
+            )}
+          </MapView>
+        </View>
+      )}
+
+      <Modal visible={showMapModal} animationType="slide">
+        <View style={styles.modalContainer}>
+          <MapView
+            style={styles.modalMap}
+            initialRegion={{
+              latitude: coordinates?.latitude || 40.4168,
+              longitude: coordinates?.longitude || -3.7038,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            }}
+          >
+            {coordinates && (
+              <Marker coordinate={coordinates} title="Origin" pinColor="blue" />
+            )}
+            {arrivalCoordinates && (
+              <Marker coordinate={arrivalCoordinates} title="Destination" />
+            )}
+          </MapView>
+          <TouchableOpacity
+            onPress={() => setShowMapModal(false)}
+            style={styles.closeButton}
+          >
+            <Text>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
 
       <Switch value={isRecurring} onValueChange={setIsRecurring} />
       <Text style={styles.label}>
@@ -285,7 +338,6 @@ export default function Publish() {
             : "Select Start Date"}
         </Text>
       </TouchableOpacity>
-
       {isRecurring && (
         <TouchableOpacity
           style={styles.input}
@@ -296,7 +348,6 @@ export default function Publish() {
           </Text>
         </TouchableOpacity>
       )}
-
       <TouchableOpacity
         style={styles.input}
         onPress={() => setShowPicker("time")}
@@ -315,7 +366,6 @@ export default function Publish() {
           }}
         />
       )}
-
       {showPicker === "end" && isRecurring && (
         <DateTimePicker
           value={endDate || new Date()}
@@ -327,7 +377,6 @@ export default function Publish() {
           }}
         />
       )}
-
       {showPicker === "time" && (
         <DateTimePicker
           value={new Date()}
@@ -335,10 +384,8 @@ export default function Publish() {
           display={Platform.OS === "ios" ? "spinner" : "default"}
           onChange={(_, selectedTime) => {
             setShowPicker(null);
-            if (selectedTime) {
-              const formattedTime = selectedTime.toTimeString().split(" ")[0];
-              setTime(formattedTime);
-            }
+            if (selectedTime)
+              setTime(selectedTime.toTimeString().split(" ")[0]);
           }}
         />
       )}
@@ -346,23 +393,14 @@ export default function Publish() {
       <TouchableOpacity style={styles.button} onPress={handlePublish}>
         <Text style={styles.buttonText}>Publish Trip</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#000",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    color: "#fff",
-    marginBottom: 20,
-  },
+  scrollContainer: { flex: 1, backgroundColor: "#000" },
+  container: { padding: 20, alignItems: "center" },
+  title: { fontSize: 24, color: "#fff", marginBottom: 20 },
   input: {
     width: "100%",
     padding: 10,
@@ -371,33 +409,61 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     color: "#fff",
   },
-  inputText: {
-    color: "#fff",
-  },
-  label: {
-    color: "#fff",
-    marginBottom: 10,
-  },
+  inputText: { color: "#fff" },
+  label: { color: "#fff", marginBottom: 10 },
   button: {
     backgroundColor: "#d9534f",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 5,
+    marginBottom: 20,
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-  },
-  map: {
-    flex: 1,
-    marginTop: 20,
+  buttonText: { color: "#fff", fontSize: 16 },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
     width: "100%",
+    marginBottom: 15,
+  },
+  flex: { flex: 1, marginBottom: 0 },
+  resetButton: {
+    backgroundColor: "#555",
+    padding: 10,
+    marginLeft: 10,
     borderRadius: 5,
   },
-  loadingText: {
-    textAlign: "center",
-    marginTop: 10,
-    fontSize: 16,
-    color: "blue",
+  resetButtonText: { color: "#fff" },
+  mapControls: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  mapButton: {
+    marginTop: 20,
+    backgroundColor: "#007bff",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  mapButtonText: { color: "#fff", fontSize: 16 },
+  loader: { marginVertical: 10 },
+  mapContainer: {
+    width: "100%",
+    height: 200,
+    borderRadius: 10,
+    overflow: "hidden",
+    marginTop: 20,
+  },
+  map: { width: "100%", height: "100%" },
+  modalContainer: { flex: 1 },
+  modalMap: { flex: 1 },
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    backgroundColor: "white",
+    padding: 10,
+    borderRadius: 10,
+    elevation: 5,
   },
 });
