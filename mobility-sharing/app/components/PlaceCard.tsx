@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { PlaceCardProps } from "../models/PlaceCardModel";
 import travelService from "../services/travelService";
+import userTravelService from "../services/userTravelService";
 
 const PlaceCard = ({
   id,
@@ -18,6 +19,7 @@ const PlaceCard = ({
   longitudeDestination = 0,
   enrolled = false,
   status = "ACTIVE",
+  userId = 0,
   fetchUserData,
 }: PlaceCardProps) => {
   const [mapVisible, setMapVisible] = useState(false);
@@ -31,10 +33,24 @@ const PlaceCard = ({
       .cancelTravel(travelId)
       .then((response) => {
         Alert.alert("Success", "Travel has been canceled.");
-        if (fetchUserData) fetchUserData(); // Llamar a la función del padre para hacer el fetch
+        if (fetchUserData) fetchUserData();
       })
       .catch((error) => {
         Alert.alert("Error", error.message);
+      });
+  };
+
+  const handleUnenroll = async (travelId: number, userId: number) => {
+    console.log("Unenrolling from travel:", travelId, userId);
+    await userTravelService
+      .cancelUserTravel(travelId, userId)
+      .then((response) => {
+        console.log("Unenroll response:", response);
+        Alert.alert(
+          "Success",
+          "You have successfully unenrolled from the travel."
+        );
+        if (fetchUserData) fetchUserData();
       });
   };
 
@@ -130,7 +146,7 @@ const PlaceCard = ({
                 Alert.alert("Error", "Travel ID is undefined.");
               }
             } else {
-              alert("You are not enrolled in this trip.");
+              handleUnenroll(id!, userId!);
             }
           }}
         >

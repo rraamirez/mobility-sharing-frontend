@@ -22,8 +22,33 @@ export const bookTravel = async (travelId: number, userId: number) => {
   }
 };
 
+export const cancelUserTravel = async (travelId: number, userId: number) => {
+  try {
+    const response = await api.put(`${API_URL}/reject/${travelId}/${userId}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Error while cancelling travel"
+    );
+  }
+};
+
+export const acceptUserTravel = async (travelId: number, userId: number) => {
+  try {
+    const response = await api.put(`${API_URL}/accept/${travelId}/${userId}`);
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Error while accepting travel"
+    );
+  }
+};
+
+
 const travelService = {
   bookTravel,
+  cancelUserTravel,
+  acceptUserTravel
 };
 
 export default travelService;

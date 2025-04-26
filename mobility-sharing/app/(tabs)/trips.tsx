@@ -25,14 +25,12 @@ export default function Trips() {
   const [myTrips, setMyTrips] = useState<TravelModel[]>([]);
   const [enrolledTrips, setEnrolledTrips] = useState<TravelModel[]>([]);
 
-  // Función para obtener los datos del usuario
   const fetchUserData = async () => {
     try {
       const fetchedUser = await userService.getMyUser();
       setUser(fetchedUser);
       console.log("Fetched user:", fetchedUser);
 
-      // Obtener viajes del conductor
       const trips = await travelService.getTravelsByDriver(fetchedUser.id);
       setMyTrips(trips);
 
@@ -53,35 +51,6 @@ export default function Trips() {
       fetchUserData();
     }, [])
   );
-
-  const latitude = 48.8584;
-  const longitude = 2.2945;
-
-  const drivingTrips = [
-    {
-      name: "Eiffel Tower",
-      description: "A famous iron tower located in Paris, France.",
-      latitude: 48.8584,
-      longitude: 2.2945,
-    },
-    {
-      name: "Great Wall of China",
-      description:
-        "A series of fortifications in China, built to protect against invasions.",
-      latitude: 40.4319,
-      longitude: 116.5704,
-    },
-  ];
-
-  const enrolledTripsData = [
-    {
-      name: "Machu Picchu",
-      description:
-        "An ancient Incan city located in the Andes mountains of Peru.",
-      latitude: -13.1631,
-      longitude: -72.545,
-    },
-  ];
 
   return (
     <View style={styles.container}>
@@ -121,6 +90,7 @@ export default function Trips() {
             price={place.price}
             enrolled={view === "enrolled"}
             status={place.status}
+            userId={user?.id}
             fetchUserData={fetchUserData}
           />
         ))}

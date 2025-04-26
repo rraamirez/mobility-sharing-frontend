@@ -63,7 +63,8 @@ export default function Search() {
     }
   };
 
-  const bookTravel = async (travelId: number): Promise<void> => {
+  const bookTravel = async (travelId: number, price: number): Promise<void> => {
+    console.log("Booking travel with ID:", travelId);
     if (!user) {
       console.error("User not found. Cannot book travel.");
       return;
@@ -72,12 +73,20 @@ export default function Search() {
       console.error("Travel ID is required to book travel.");
       return;
     }
+
+    if (price > user.rupeeWallet) {
+      alert("Insufficient funds in wallet. Please recharge.");
+      return;
+    }
+
     const data = await userTravelService.bookTravel(travelId, user!.id);
     if (!data) {
       console.error("Failed to book travel.");
       return;
     } else {
-      alert("Travel booked successfully!");
+      alert(
+        "Travel booked successfully! We will noitify you when the driver takes the final decision."
+      );
       router.replace("/trips");
     }
 
@@ -85,6 +94,17 @@ export default function Search() {
   };
 
   const bookAllTravels = async (group: TravelModel[]) => {
+    let finalPrice = 0;
+    let userWallet = user?.rupeeWallet || 0;
+    group.forEach((travel) => {
+      finalPrice += travel.price;
+    });
+
+    if (finalPrice > userWallet) {
+      alert("Insufficient funds in wallet. Please recharge.");
+      return;
+    }
+
     if (!user) {
       alert("User not found. Please log in.");
       return;
@@ -145,82 +165,102 @@ export default function Search() {
       {error && <Text style={styles.errorText}>{error}</Text>}
 
       <FlatList
-  data={results}
-  keyExtractor={(_, index) => `group-${index}`}
-  renderItem={({ item: group, index: groupIndex }) => (
-    <View>
-      {group.length > 1 ? (
-        <>
-          <TouchableOpacity
-            style={styles.groupHeaderContainer}
-            onPress={() => toggleGroup(groupIndex)}
-          >
-            <Text style={styles.groupHeader}>{`${group[0].origin} ➝ ${group[0].destination}`}</Text>
-            <TouchableOpacity
-              style={styles.bookAllButton}
-              onPress={() => bookAllTravels(group)}
-            >
-              <Text style={styles.bookAllButtonText}>Book All</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-
-          {expandedGroups.has(groupIndex) && (
-            <FlatList
-              data={group}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <View style={styles.resultItem}>
-                  <Ionicons name="car-outline" size={24} color="#fff" />
-                  <View style={styles.resultInfo}>
-                    <Text style={styles.resultText}>
-                      {`${item.origin} ➝ ${item.destination}`}
-                    </Text>
-                    <Text style={styles.driverText}>{`👤 Driver: ${item.driver.name}`}</Text>
-                    <Text style={styles.priceText}>{`💰 ${item.price} Rupees`}</Text>
-                    <Text style={styles.dateText}>{`📅 ${item.date} ⏰ ${item.time}`}</Text>
-                    <Text style={styles.recurrenceText}>
-                      {`🔁 Recurrent travel: ${item.travelRecurrenceModel?.id ? "Yes" : "No"}`}
-                    </Text>
-                  </View>
+        data={results}
+        keyExtractor={(_, index) => `group-${index}`}
+        renderItem={({ item: group, index: groupIndex }) => (
+          <View>
+            {group.length > 1 ? (
+              <>
+                <TouchableOpacity
+                  style={styles.groupHeaderContainer}
+                  onPress={() => toggleGroup(groupIndex)}
+                >
+                  <Text
+                    style={styles.groupHeader}
+                  >{`${group[0].origin} ➝ ${group[0].destination}`}</Text>
                   <TouchableOpacity
-                    style={styles.bookButton}
-                    onPress={() => bookTravel(item.id)}
+                    style={styles.bookAllButton}
+                    onPress={() => bookAllTravels(group)}
                   >
-                    <Text style={styles.bookButtonText}>Book Now</Text>
+                    <Text style={styles.bookAllButtonText}>Book All</Text>
                   </TouchableOpacity>
+                </TouchableOpacity>
+
+                {expandedGroups.has(groupIndex) && (
+                  <FlatList
+                    data={group}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={({ item }) => (
+                      <View style={styles.resultItem}>
+                        <Ionicons name="car-outline" size={24} color="#fff" />
+                        <View style={styles.resultInfo}>
+                          <Text style={styles.resultText}>
+                            {`${item.origin} ➝ ${item.destination}`}
+                          </Text>
+                          <Text
+                            style={styles.driverText}
+                          >{`👤 Driver: ${item.driver.name}`}</Text>
+                          <Text
+                            style={styles.priceText}
+                          >{`💰 ${item.price} Rupees`}</Text>
+                          <Text
+                            style={styles.dateText}
+                          >{`📅 ${item.date} ⏰ ${item.time}`}</Text>
+                          <Text style={styles.recurrenceText}>
+                            {`🔁 Recurrent travel: ${
+                              item.travelRecurrenceModel?.id ? "Yes" : "No"
+                            }`}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={styles.bookButton}
+                          onPress={() => bookTravel(item.id, item.price)}
+                        >
+                          <Text style={styles.bookButtonText}>Book Now</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  />
+                )}
+              </>
+            ) : (
+              <View style={styles.resultItem}>
+                <Ionicons name="car-outline" size={24} color="#fff" />
+                <View style={styles.resultInfo}>
+                  <Text style={styles.resultText}>
+                    {`${group[0].origin} ➝ ${group[0].destination}`}
+                  </Text>
+                  <Text
+                    style={styles.driverText}
+                  >{`👤 Driver: ${group[0].driver.name}`}</Text>
+                  <Text
+                    style={styles.priceText}
+                  >{`💰 ${group[0].price} Rupees`}</Text>
+                  <Text
+                    style={styles.dateText}
+                  >{`📅 ${group[0].date} ⏰ ${group[0].time}`}</Text>
+                  <Text style={styles.recurrenceText}>
+                    {`🔁 Recurrent travel: ${
+                      group[0].travelRecurrenceModel?.id ? "Yes" : "No"
+                    }`}
+                  </Text>
                 </View>
-              )}
-            />
-          )}
-        </>
-      ) : (
-        <View style={styles.resultItem}>
-          <Ionicons name="car-outline" size={24} color="#fff" />
-          <View style={styles.resultInfo}>
-            <Text style={styles.resultText}>
-              {`${group[0].origin} ➝ ${group[0].destination}`}
-            </Text>
-            <Text style={styles.driverText}>{`👤 Driver: ${group[0].driver.name}`}</Text>
-            <Text style={styles.priceText}>{`💰 ${group[0].price} Rupees`}</Text>
-            <Text style={styles.dateText}>{`📅 ${group[0].date} ⏰ ${group[0].time}`}</Text>
-            <Text style={styles.recurrenceText}>
-              {`🔁 Recurrent travel: ${group[0].travelRecurrenceModel?.id ? "Yes" : "No"}`}
-            </Text>
+                <TouchableOpacity
+                  style={styles.bookButton}
+                  onPress={() => bookTravel(group[0].id, group[0].price)}
+                >
+                  <Text style={styles.bookButtonText}>Book Now</Text>
+                </TouchableOpacity>
+              </View>
+            )}
           </View>
-          <TouchableOpacity
-            style={styles.bookButton}
-            onPress={() => bookTravel(group[0].id)}
-          >
-            <Text style={styles.bookButtonText}>Book Now</Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-  )}
-  ListEmptyComponent={
-    !loading ? <Text style={styles.noResultsText}>No trips available</Text> : null
-  }
-/>
+        )}
+        ListEmptyComponent={
+          !loading ? (
+            <Text style={styles.noResultsText}>No trips available</Text>
+          ) : null
+        }
+      />
     </View>
   );
 }

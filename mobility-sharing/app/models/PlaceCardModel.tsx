@@ -12,5 +12,6 @@ export interface PlaceCardProps {
   longitudeDestination?: number;
   enrolled?: boolean;
   status?: "ACTIVE" | "COMPLETED" | "CANCELED"; // Enum values from TravelStatus
+  userId?: number;
   fetchUserData: () => Promise<void>;
 } //introduce status and logitude latitude etc accoording to backend
