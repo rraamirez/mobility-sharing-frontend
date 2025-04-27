@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   TouchableOpacity,
 } from "react-native";
+import MapView, { Marker } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import travelService from "../services/travelService";
 import { TravelModel } from "../models/TravelModel";
@@ -26,11 +27,17 @@ export default function Search() {
   const [user, setUser] = useState<UserModel | null>(null);
   const router = useRouter();
 
+  const [mapVisible, setMapVisible] = useState(false);
+
   useFocusEffect(
     useCallback(() => {
       fetchUser();
     }, [])
   );
+
+  const toggleMapVisibility = () => {
+    setMapVisible((prevState) => !prevState);
+  };
 
   const fetchUser = async () => {
     try {
@@ -89,8 +96,6 @@ export default function Search() {
       );
       router.replace("/trips");
     }
-
-    //console.log("Booking response:", data);
   };
 
   const bookAllTravels = async (group: TravelModel[]) => {
@@ -114,9 +119,14 @@ export default function Search() {
       return;
     }
     try {
-      await Promise.all(
-        group.map((travel) => userTravelService.bookTravel(travel.id, user.id))
-      );
+      // await Promise.all( //problems with transactions in the backend
+      //   group.map((travel) => userTravelService.bookTravel(travel.id, user.id))
+      // );
+
+      for (const travel of group) {
+        await userTravelService.bookTravel(travel.id, user.id);
+      }
+
       alert("All travels booked successfully!");
       router.replace("/trips");
     } catch (error) {
@@ -251,6 +261,7 @@ export default function Search() {
                 >
                   <Text style={styles.bookButtonText}>Book Now</Text>
                 </TouchableOpacity>
+                <View style={{ height: 10 }} />
               </View>
             )}
           </View>

@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { PlaceCardProps } from "../models/PlaceCardModel";
 import travelService from "../services/travelService";
 import userTravelService from "../services/userTravelService";
+import { useFocusEffect } from "@react-navigation/native";
 
 const PlaceCard = ({
   id,
@@ -20,9 +21,18 @@ const PlaceCard = ({
   enrolled = false,
   status = "ACTIVE",
   userId = 0,
+  userTravelStatus = "pending",
   fetchUserData,
 }: PlaceCardProps) => {
   const [mapVisible, setMapVisible] = useState(false);
+  const [localUserTravelStatus, setLocalUserTravelStatus] =
+    useState<string>(userTravelStatus);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserTravel();
+    }, [enrolled, id, userId])
+  );
 
   const toggleMapVisibility = () => {
     setMapVisible((prevState) => !prevState);
@@ -54,6 +64,18 @@ const PlaceCard = ({
       });
   };
 
+  const fetchUserTravel = async () => {
+    if (enrolled && id && userId) {
+      try {
+        const response =
+          await userTravelService.getUserTravelByUserIdAndTravelId(userId, id);
+        setLocalUserTravelStatus(response.status);
+      } catch (error) {
+        console.error("Error fetching user travel:", error);
+      }
+    }
+  };
+
   return (
     <View style={styles.cardContainer}>
       <Text style={styles.placeName}>{name}</Text>
@@ -65,6 +87,11 @@ const PlaceCard = ({
         <Text style={styles.detailText}>⏰ Time: {time}</Text>
         <Text style={styles.detailText}>💰 Price: {price} rupees</Text>
         <Text style={styles.detailText}>Status : {status}</Text>
+        {enrolled && (
+          <Text style={styles.detailText}>
+            Confirmation: {localUserTravelStatus}
+          </Text>
+        )}
       </View>
 
       {mapVisible && (

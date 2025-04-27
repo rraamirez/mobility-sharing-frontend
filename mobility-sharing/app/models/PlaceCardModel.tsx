@@ -13,5 +13,6 @@ export interface PlaceCardProps {
   enrolled?: boolean;
   status?: "ACTIVE" | "COMPLETED" | "CANCELED"; // Enum values from TravelStatus
   userId?: number;
+  userTravelStatus?: "pending" | "confirmed" | "canceled"; // Enum values from UserTravelStatus
   fetchUserData: () => Promise<void>;
 } //introduce status and logitude latitude etc accoording to backend
