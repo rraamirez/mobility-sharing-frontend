@@ -35,6 +35,7 @@ const PlaceCard = ({
   fetchUserData,
 }: PlaceCardProps) => {
   const [mapVisible, setMapVisible] = useState(false);
+  const [travellersVisible, setTravellersVisible] = useState(false);
   const [localUserTravelStatus, setLocalUserTravelStatus] =
     useState<string>(userTravelStatus);
 
@@ -94,11 +95,18 @@ const PlaceCard = ({
       try {
         const response = await userTravelService.getUserTravelsByTravelId(id);
         setUserTravellers(response);
-        alert(
-          `User Travellers: ${response.map(
-            (traveller) => traveller.user.username
-          )} `
-        );
+        setTravellersVisible((prevState) => !prevState);
+      } catch (error) {
+        console.error("Error fetching user travels:", error);
+      }
+    }
+  };
+
+  const simpleFetchUserTravelsByTravelId = async () => {
+    if (id) {
+      try {
+        const response = await userTravelService.getUserTravelsByTravelId(id);
+        setUserTravellers(response);
       } catch (error) {
         console.error("Error fetching user travels:", error);
       }
@@ -108,14 +116,14 @@ const PlaceCard = ({
   const handleAcceptTraveller = (travelId: number, userId: number) => {
     userTravelService
       .acceptUserTravel(travelId, userId)
-      .then(fetchUserTravelsByTravelId)
+      .then(simpleFetchUserTravelsByTravelId)
       .catch((err) => Alert.alert("Error", err.message));
   };
 
   const handleRejectTraveller = (travelId: number, userId: number) => {
     userTravelService
       .cancelUserTravel(travelId, userId)
-      .then(fetchUserTravelsByTravelId)
+      .then(simpleFetchUserTravelsByTravelId)
       .catch((err) => Alert.alert("Error", err.message));
   };
 
@@ -131,7 +139,17 @@ const PlaceCard = ({
         <Text style={styles.detailText}>💰 Price: {price} rupees</Text>
         <Text style={styles.detailText}>Status : {status}</Text>
         {enrolled && (
-          <Text style={styles.detailText}>
+          <Text
+            style={[
+              localUserTravelStatus === "confirmed"
+                ? { color: "#0DBF6F", fontWeight: "bold" }
+                : localUserTravelStatus === "pending"
+                ? { color: "#FFA500", fontWeight: "bold" }
+                : localUserTravelStatus === "canceled"
+                ? { color: "#FF0000", fontWeight: "bold" }
+                : {},
+            ]}
+          >
             Confirmation: {localUserTravelStatus}
           </Text>
         )}
@@ -239,34 +257,44 @@ const PlaceCard = ({
           </TouchableOpacity>
         </View>
       )}
-      {userTravellers.length > 0 && (
+      {userTravellers.length > 0 && travellersVisible && (
         <View style={styles.travellersContainer}>
           {userTravellers.map((traveller, index) => (
             <View key={index} style={styles.travellerItem}>
-              <View>
+              <View style={styles.travellerInfo}>
                 <Text style={styles.detailText}>{traveller.user.username}</Text>
-                <Text style={styles.detailText}>
-                  Status: {traveller.status}
-                </Text>
               </View>
-              <View style={styles.travellerActions}>
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.acceptButton]}
-                  onPress={() =>
-                    id && handleAcceptTraveller(id, traveller.user.id)
-                  }
-                >
-                  <Text style={styles.buttonTextSmall}>Accept</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.actionButton, styles.rejectButton]}
-                  onPress={() =>
-                    id && handleRejectTraveller(id, traveller.user.id)
-                  }
-                >
-                  <Text style={styles.buttonTextSmall}>Reject</Text>
-                </TouchableOpacity>
-              </View>
+
+              {traveller.status === "pending" && (
+                <View style={styles.travellerActions}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.acceptButton]}
+                    onPress={() =>
+                      id && handleAcceptTraveller(id, traveller.user.id)
+                    }
+                  >
+                    <Text style={styles.buttonTextSmall}>Accept</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.rejectButton]}
+                    onPress={() =>
+                      id && handleRejectTraveller(id, traveller.user.id)
+                    }
+                  >
+                    <Text style={styles.buttonTextSmall}>Reject</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              {traveller.status === "confirmed" && (
+                <View style={styles.travellerActions}>
+                  <Text style={styles.statusConfirmed}>Confirmed</Text>
+                </View>
+              )}
+              {traveller.status === "canceled" && (
+                <View style={styles.travellerActions}>
+                  <Text style={styles.statusCanceled}>Canceled</Text>
+                </View>
+              )}
             </View>
           ))}
         </View>
@@ -347,7 +375,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#007bff",
   },
   cancelButton: {
-    backgroundColor: "#d9534f",
+    backgroundColor: "#444",
   },
   showMapButton: {
     backgroundColor: "#444",
@@ -374,6 +402,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    width: "100%",
     marginBottom: 8,
   },
   travellerName: {
@@ -394,13 +423,18 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   acceptButton: {
-    backgroundColor: "#0DBF6F",
+    backgroundColor: "#444",
   },
   rejectButton: {
-    backgroundColor: "#FF6347",
+    backgroundColor: "#FF8000",
   },
   statusConfirmed: {
     color: "#0DBF6F",
+    fontWeight: "bold",
+  },
+  statusCanceled: {
+    color: "#FF8000",
+    fontWeight: "bold",
   },
   row: {
     flexDirection: "row",
@@ -411,6 +445,10 @@ const styles = StyleSheet.create({
   buttonTextSmall: {
     color: "#fff",
     fontSize: 14,
+  },
+  travellerInfo: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
 });
 

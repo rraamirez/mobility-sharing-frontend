@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: "#444",
   },
-  activeTab: { backgroundColor: "#d9534f" },
+  activeTab: { backgroundColor: "#FF8000" },
   tabText: { color: "#fff", fontSize: 14 },
   content: { flex: 1, width: "100%" },
   card: {
