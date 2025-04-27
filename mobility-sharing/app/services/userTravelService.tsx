@@ -60,11 +60,25 @@ export const getUserTravelByUserIdAndTravelId = async (
   }
 };
 
+export const getUserTravelsByTravelId = async (travelId: number) => {
+  try {
+    const response = await api.get<UserTravelModel[]>(
+      `${API_URL}/travel/${travelId}`
+    );
+    return response.data;
+  } catch (error: any) {
+    throw new Error(
+      error.response?.data?.message || "Error while fetching user travel"
+    );
+  }
+};
+
 const travelService = {
   bookTravel,
   cancelUserTravel,
   acceptUserTravel,
   getUserTravelByUserIdAndTravelId,
+  getUserTravelsByTravelId,
 };
 
 export default travelService;

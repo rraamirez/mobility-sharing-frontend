@@ -1,10 +1,20 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  Modal,
+  FlatList,
+  TextInput,
+} from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { PlaceCardProps } from "../models/PlaceCardModel";
 import travelService from "../services/travelService";
 import userTravelService from "../services/userTravelService";
 import { useFocusEffect } from "@react-navigation/native";
+import { UserTravelModel } from "../models/UserTravelModel";
 
 const PlaceCard = ({
   id,
@@ -28,9 +38,12 @@ const PlaceCard = ({
   const [localUserTravelStatus, setLocalUserTravelStatus] =
     useState<string>(userTravelStatus);
 
+  const [userTravellers, setUserTravellers] = useState<UserTravelModel[]>([]);
+
   useFocusEffect(
     useCallback(() => {
       fetchUserTravel();
+      fetchUserTravelsByTravelId;
     }, [enrolled, id, userId])
   );
 
@@ -74,6 +87,36 @@ const PlaceCard = ({
         console.error("Error fetching user travel:", error);
       }
     }
+  };
+
+  const fetchUserTravelsByTravelId = async () => {
+    if (id) {
+      try {
+        const response = await userTravelService.getUserTravelsByTravelId(id);
+        setUserTravellers(response);
+        alert(
+          `User Travellers: ${response.map(
+            (traveller) => traveller.user.username
+          )} `
+        );
+      } catch (error) {
+        console.error("Error fetching user travels:", error);
+      }
+    }
+  };
+
+  const handleAcceptTraveller = (travelId: number, userId: number) => {
+    userTravelService
+      .acceptUserTravel(travelId, userId)
+      .then(fetchUserTravelsByTravelId)
+      .catch((err) => Alert.alert("Error", err.message));
+  };
+
+  const handleRejectTraveller = (travelId: number, userId: number) => {
+    userTravelService
+      .cancelUserTravel(travelId, userId)
+      .then(fetchUserTravelsByTravelId)
+      .catch((err) => Alert.alert("Error", err.message));
   };
 
   return (
@@ -186,6 +229,48 @@ const PlaceCard = ({
           </Text>
         </TouchableOpacity>
       </View>
+      {!enrolled && (
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.fullButton]}
+            onPress={fetchUserTravelsByTravelId}
+          >
+            <Text style={styles.buttonText}>Handle Travellers</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+      {userTravellers.length > 0 && (
+        <View style={styles.travellersContainer}>
+          {userTravellers.map((traveller, index) => (
+            <View key={index} style={styles.travellerItem}>
+              <View>
+                <Text style={styles.detailText}>{traveller.user.username}</Text>
+                <Text style={styles.detailText}>
+                  Status: {traveller.status}
+                </Text>
+              </View>
+              <View style={styles.travellerActions}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.acceptButton]}
+                  onPress={() =>
+                    id && handleAcceptTraveller(id, traveller.user.id)
+                  }
+                >
+                  <Text style={styles.buttonTextSmall}>Accept</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.rejectButton]}
+                  onPress={() =>
+                    id && handleRejectTraveller(id, traveller.user.id)
+                  }
+                >
+                  <Text style={styles.buttonTextSmall}>Reject</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
     </View>
   );
 };
@@ -250,6 +335,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "48%",
   },
+  fullButton: {
+    backgroundColor: "#444",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    width: "100%",
+  },
   unenrollButton: {
     backgroundColor: "#007bff",
   },
@@ -269,6 +362,55 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 8,
     marginBottom: 10,
+  },
+  travellersContainer: {
+    width: "100%",
+    backgroundColor: "#333",
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 12,
+  },
+  travellerItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  travellerName: {
+    color: "#fff",
+    fontSize: 14,
+  },
+  travellerStatus: {
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  travellerActions: {
+    flexDirection: "row",
+  },
+  actionButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    marginLeft: 6,
+  },
+  acceptButton: {
+    backgroundColor: "#0DBF6F",
+  },
+  rejectButton: {
+    backgroundColor: "#FF6347",
+  },
+  statusConfirmed: {
+    color: "#0DBF6F",
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 15,
+  },
+  buttonTextSmall: {
+    color: "#fff",
+    fontSize: 14,
   },
 });
 
