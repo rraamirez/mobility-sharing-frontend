@@ -27,6 +27,7 @@ export default function ProfileScreen() {
     name: "",
     email: "",
     username: "",
+    password: "",
   });
 
   const fetchUser = async () => {
@@ -37,6 +38,7 @@ export default function ProfileScreen() {
         name: fetchedUser.name,
         email: fetchedUser.email,
         username: fetchedUser.username,
+        password: "",
       });
     } catch (error) {
       console.error("Error while fetching user:", error);
@@ -54,6 +56,14 @@ export default function ProfileScreen() {
   };
 
   const handleUpdate = async () => {
+    if (!formData.password.trim()) {
+      Alert.alert(
+        "Password Required",
+        "Please enter your password to update your profile."
+      );
+      return;
+    }
+
     try {
       const updatedUser = await userService.updateMyUser(formData);
       setUser(updatedUser);
@@ -61,8 +71,8 @@ export default function ProfileScreen() {
         name: updatedUser.name,
         email: updatedUser.email,
         username: updatedUser.username,
+        password: "",
       });
-      console.log("User updated successfully", updatedUser);
 
       Alert.alert(
         "Success",
@@ -114,6 +124,15 @@ export default function ProfileScreen() {
             placeholder="Username"
             placeholderTextColor="#aaa"
             maxLength={15}
+          />
+          <Text style={styles.label}>New Password (required for update)</Text>
+          <TextInput
+            style={styles.input}
+            value={formData.password}
+            onChangeText={(text) => handleChange("password", text)}
+            placeholder="Password"
+            placeholderTextColor="#aaa"
+            secureTextEntry
           />
           <Text style={styles.label}>Rupee Wallet</Text>
           <View style={styles.readonlyContainer}>

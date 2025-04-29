@@ -3,9 +3,10 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const api = axios.create({
   baseURL: "http://10.0.2.2:8080",
+  //baseURL: "http://192.168.1.46:8080",
   headers: {
-    "Content-Type": "application/json", 
-  }
+    "Content-Type": "application/json",
+  },
 });
 
 api.interceptors.request.use(async (config) => {
@@ -15,7 +16,5 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
-
-//here you can handle more types of responses
 
 export default api;
