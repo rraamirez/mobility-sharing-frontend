@@ -12,4 +12,5 @@ export interface UserModel {
   rupeeWallet: number;
   createdAt: string;
   role: RoleModel;
+  rating: number;
 }

@@ -95,6 +95,11 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Profile</Text>
+      {user?.rating != null && (
+        <View style={styles.ratingContainer}>
+          <Text style={styles.ratingText}>⭐ Rating: {user.rating}/5</Text>
+        </View>
+      )}
       {user && (
         <View style={styles.profileContainer}>
           <Text style={styles.label}>Name (Max 100 characters)</Text>
@@ -155,7 +160,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#000",
+    backgroundColor: "#121212",
     padding: 20,
   },
   title: {
@@ -217,5 +222,16 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  ratingContainer: {
+    alignItems: "center",
+    marginVertical: 10,
+    marginBottom: 20,
+  },
+
+  ratingText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#f39c12",
   },
 });

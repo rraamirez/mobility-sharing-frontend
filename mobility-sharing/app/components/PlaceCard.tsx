@@ -21,6 +21,7 @@ const PlaceCard = ({
   name = "Unknown Place",
   description = "No description available",
   driver = "Unknown Driver",
+  driverRating = 3,
   date = "Unknown Date",
   time = "Unknown Time",
   price = 0,
@@ -134,6 +135,7 @@ const PlaceCard = ({
 
       <View style={styles.detailsContainer}>
         <Text style={styles.detailText}>🚗 Driver: {driver}</Text>
+        <Text style={styles.detailText}>⭐ Rating: {driverRating} / 5</Text>
         <Text style={styles.detailText}>📅 Date: {date}</Text>
         <Text style={styles.detailText}>⏰ Time: {time}</Text>
         <Text style={styles.detailText}>💰 Price: {price} rupees</Text>
