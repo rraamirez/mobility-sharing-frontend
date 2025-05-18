@@ -7,13 +7,16 @@ import {
   TextInput,
   Switch,
   Platform,
-  FlatList,
+  Modal,
+  ActivityIndicator,
+  ScrollView,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect, useRouter } from "expo-router";
 import userService from "../services/userService";
 import { UserModel } from "../models/Users";
 import travelService from "../services/travelService";
+import MapView, { Marker } from "react-native-maps";
 
 export default function Publish() {
   const [origin, setOrigin] = useState("");
@@ -30,9 +33,81 @@ export default function Publish() {
 
   const router = useRouter();
 
+  const [address, setAddress] = useState("");
+  const [arrivalAddress, setArrivalAddress] = useState("");
+  const [coordinates, setCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [arrivalCoordinates, setArrivalCoordinates] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
+
+  const fetchCoordinates = async () => {
+    setCoordinates(null);
+    setArrivalCoordinates(null);
+    setShowMapModal(false);
+
+    if (!address || !arrivalAddress) {
+      alert("Please enter both addresses");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const responseOrigin = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          address
+        )}`,
+        { headers: { "User-Agent": "MyApp/1.0 (myemail@example.com)" } }
+      );
+      const responseArrival = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          arrivalAddress
+        )}`,
+        { headers: { "User-Agent": "MyApp/1.0 (myemail@example.com)" } }
+      );
+      const dataOrigin = await responseOrigin.json();
+      const dataArrival = await responseArrival.json();
+
+      if (dataOrigin.length > 0) {
+        const latOrigin = parseFloat(dataOrigin[0].lat);
+        const lonOrigin = parseFloat(dataOrigin[0].lon);
+        setCoordinates({ latitude: latOrigin, longitude: lonOrigin });
+      } else alert("Origin address not found.");
+
+      if (dataArrival.length > 0) {
+        const latArrival = parseFloat(dataArrival[0].lat);
+        const lonArrival = parseFloat(dataArrival[0].lon);
+        setArrivalCoordinates({ latitude: latArrival, longitude: lonArrival });
+      } else alert("Arrival address not found.");
+    } catch (error) {
+      alert("Error fetching coordinates");
+    }
+    setLoading(false);
+  };
+
   useFocusEffect(
     useCallback(() => {
       fetchUser();
+      return () => {
+        setOrigin("");
+        setDestination("");
+        setPrice("");
+        setStartDate(null);
+        setEndDate(null);
+        setTime(null);
+        setIsRecurring(false);
+        setAddress("");
+        setArrivalAddress("");
+        setCoordinates(null);
+        setArrivalCoordinates(null);
+        setShowMapModal(false);
+        setShowPicker(null);
+      };
     }, [])
   );
 
@@ -72,67 +147,43 @@ export default function Publish() {
       ? generateDateRange(startDate!, endDate!)
       : [startDate!.toISOString().split("T")[0]];
 
-    const payload = dates.map((date) => ({
-      driver: { id: user?.id ?? null },
-      origin,
-      destination,
-      date,
-      time,
-      price: Number(price),
-    }));
+    const payload = dates.map((date) => {
+      const trip: any = {
+        driver: { id: user?.id ?? null },
+        origin,
+        destination,
+        date,
+        time,
+        price: Number(price),
+      };
 
-    if (isRecurring) {
-      console.log("Creating recurrent travel with data:", payload);
-      try {
-        const response = await travelService.createRecurrentTravel(payload);
-        if (response.status >= 200 && response.status < 300) {
-          console.log("Recurrent travel response:", response.data);
-          router.replace("/trips");
-        } else {
-          console.error(
-            "Failed to create recurrent travel, status:",
-            response.status,
-            response.data
-          );
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error(
-            "Error while creating recurrent travel:",
-            (error as any).response?.data || error.message
-          );
-        } else {
-          console.error("Unexpected error:", error);
-        }
+      // include coordinates only if all four are available
+      if (
+        coordinates?.latitude != null &&
+        coordinates?.longitude != null &&
+        arrivalCoordinates?.latitude != null &&
+        arrivalCoordinates?.longitude != null
+      ) {
+        trip.latitudeOrigin = coordinates.latitude;
+        trip.longitudeOrigin = coordinates.longitude;
+        trip.latitudeDestination = arrivalCoordinates.latitude;
+        trip.longitudeDestination = arrivalCoordinates.longitude;
       }
-    } else {
-      console.log("Creating travel with data:", payload[0]);
-      try {
-        const response = await travelService.createTravel(payload[0]);
-        if (response.status >= 200 && response.status < 300) {
-          router.replace("/trips");
-        } else {
-          console.error(
-            "Failed to create travel, status:",
-            response.status,
-            response.data
-          );
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error(
-            "Error while creating travel:",
-            (error as any).response?.data || error.message
-          );
-        } else {
-          console.error("Unexpected error:", error);
-        }
-      }
-    }
+
+      return trip;
+    });
+
+    if (isRecurring) await travelService.createRecurrentTravel(payload);
+    else await travelService.createTravel(payload[0]);
+
+    router.replace("/trips");
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.scrollContainer}
+      contentContainerStyle={styles.container}
+    >
       <Text style={styles.title}>Post a Trip</Text>
 
       <TextInput
@@ -160,7 +211,129 @@ export default function Publish() {
         onChangeText={setPrice}
       />
 
-      <Switch value={isRecurring} onValueChange={setIsRecurring} />
+      <View style={styles.row}>
+        <TextInput
+          style={[styles.input, styles.flex]}
+          placeholder="Example: Calle Cerro del Oro 60, Granada"
+          value={address}
+          onChangeText={setAddress}
+        />
+        <TouchableOpacity
+          style={styles.resetButton}
+          onPress={() => {
+            setAddress("");
+            setCoordinates(null);
+          }}
+        >
+          <Text style={styles.resetButtonText}>Reset</Text>
+        </TouchableOpacity>
+      </View>
+      <View style={styles.row}>
+        <TextInput
+          style={[styles.input, styles.flex]}
+          placeholder="Example: Calle Cerro del Oro 60, Granada"
+          value={arrivalAddress}
+          onChangeText={setArrivalAddress}
+        />
+        <TouchableOpacity
+          style={styles.resetButton}
+          onPress={() => {
+            setArrivalAddress("");
+            setArrivalCoordinates(null);
+          }}
+        >
+          <Text style={styles.resetButtonText}>Reset</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.mapControls}>
+        <TouchableOpacity style={styles.mapButton} onPress={fetchCoordinates}>
+          <Text style={styles.buttonText}>Get Coordinates</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.mapButton}
+          onPress={() => {
+            if (!coordinates || !arrivalCoordinates) {
+              alert("Please get coordinates first");
+              return;
+            }
+            setShowMapModal(true);
+          }}
+        >
+          <Text style={styles.mapButtonText}>Explore Fullscreen Map</Text>
+        </TouchableOpacity>
+      </View>
+
+      {loading && (
+        <ActivityIndicator size="large" color="#007AFF" style={styles.loader} />
+      )}
+
+      {coordinates && (
+        <View style={styles.mapContainer}>
+          <MapView
+            style={styles.map}
+            initialRegion={{
+              latitude: coordinates.latitude,
+              longitude: coordinates.longitude,
+              latitudeDelta: 0.1,
+              longitudeDelta: 0.1,
+            }}
+          >
+            <Marker
+              coordinate={coordinates}
+              title="Origin"
+              description={address}
+              pinColor="blue"
+            />
+            {arrivalCoordinates && (
+              <Marker
+                coordinate={arrivalCoordinates}
+                title="Destination"
+                description={arrivalAddress}
+              />
+            )}
+          </MapView>
+        </View>
+      )}
+
+      <Modal visible={showMapModal} animationType="slide">
+        <View style={styles.modalContainer}>
+          <MapView
+            style={styles.modalMap}
+            initialRegion={{
+              latitude: coordinates?.latitude || 40.4168,
+              longitude: coordinates?.longitude || -3.7038,
+              latitudeDelta: 0.05,
+              longitudeDelta: 0.05,
+            }}
+          >
+            {coordinates && (
+              <Marker coordinate={coordinates} title="Origin" pinColor="blue" />
+            )}
+            {arrivalCoordinates && (
+              <Marker coordinate={arrivalCoordinates} title="Destination" />
+            )}
+          </MapView>
+          <TouchableOpacity
+            onPress={() => setShowMapModal(false)}
+            style={styles.closeButton}
+          >
+            <Text>Close</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
+
+      <Switch
+        value={isRecurring}
+        onValueChange={setIsRecurring}
+        trackColor={{ false: "gray", true: "gray" }}
+        thumbColor={isRecurring ? "blue" : "white"}
+        ios_backgroundColor="#555"
+        style={{
+          marginVertical: 10,
+          transform: [{ scaleX: 1.2 }, { scaleY: 1.2 }],
+        }}
+      />
       <Text style={styles.label}>
         {isRecurring ? "Recurring Trip" : "One-time Trip"}
       </Text>
@@ -175,7 +348,6 @@ export default function Publish() {
             : "Select Start Date"}
         </Text>
       </TouchableOpacity>
-
       {isRecurring && (
         <TouchableOpacity
           style={styles.input}
@@ -186,7 +358,6 @@ export default function Publish() {
           </Text>
         </TouchableOpacity>
       )}
-
       <TouchableOpacity
         style={styles.input}
         onPress={() => setShowPicker("time")}
@@ -205,7 +376,6 @@ export default function Publish() {
           }}
         />
       )}
-
       {showPicker === "end" && isRecurring && (
         <DateTimePicker
           value={endDate || new Date()}
@@ -217,7 +387,6 @@ export default function Publish() {
           }}
         />
       )}
-
       {showPicker === "time" && (
         <DateTimePicker
           value={new Date()}
@@ -225,10 +394,8 @@ export default function Publish() {
           display={Platform.OS === "ios" ? "spinner" : "default"}
           onChange={(_, selectedTime) => {
             setShowPicker(null);
-            if (selectedTime) {
-              const formattedTime = selectedTime.toTimeString().split(" ")[0];
-              setTime(formattedTime);
-            }
+            if (selectedTime)
+              setTime(selectedTime.toTimeString().split(" ")[0]);
           }}
         />
       )}
@@ -236,23 +403,14 @@ export default function Publish() {
       <TouchableOpacity style={styles.button} onPress={handlePublish}>
         <Text style={styles.buttonText}>Publish Trip</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#000",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    color: "#fff",
-    marginBottom: 20,
-  },
+  scrollContainer: { flex: 1, backgroundColor: "#000" },
+  container: { padding: 20, alignItems: "center" },
+  title: { fontSize: 24, color: "#fff", marginBottom: 20 },
   input: {
     width: "100%",
     padding: 10,
@@ -261,21 +419,61 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     color: "#fff",
   },
-  inputText: {
-    color: "#fff",
-  },
-  label: {
-    color: "#fff",
-    marginBottom: 10,
-  },
+  inputText: { color: "#fff" },
+  label: { color: "#fff", marginBottom: 10 },
   button: {
     backgroundColor: "#d9534f",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 5,
+    marginBottom: 20,
   },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
+  buttonText: { color: "#fff", fontSize: 16 },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    width: "100%",
+    marginBottom: 15,
+  },
+  flex: { flex: 1, marginBottom: 0 },
+  resetButton: {
+    backgroundColor: "#555",
+    padding: 10,
+    marginLeft: 10,
+    borderRadius: 5,
+  },
+  resetButtonText: { color: "#fff" },
+  mapControls: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  mapButton: {
+    marginTop: 20,
+    backgroundColor: "#007bff",
+    padding: 10,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  mapButtonText: { color: "#fff", fontSize: 16 },
+  loader: { marginVertical: 10 },
+  mapContainer: {
+    width: "100%",
+    height: 200,
+    borderRadius: 10,
+    overflow: "hidden",
+    marginTop: 20,
+  },
+  map: { width: "100%", height: "100%" },
+  modalContainer: { flex: 1 },
+  modalMap: { flex: 1 },
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    backgroundColor: "white",
+    padding: 10,
+    borderRadius: 10,
+    elevation: 5,
   },
 });

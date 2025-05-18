@@ -147,6 +147,7 @@ export default function Ratings() {
                 <Text
                   style={styles.cardText}
                 >{`Date: ${item.driver.name}`}</Text>
+                <Text style={styles.cardText}>{`Status: ${item.status}`}</Text>
                 <TouchableOpacity
                   style={styles.rateButton}
                   onPress={() => openRatingModal(item)}
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     backgroundColor: "#444",
   },
-  activeTab: { backgroundColor: "#d9534f" },
+  activeTab: { backgroundColor: "#FF8000" },
   tabText: { color: "#fff", fontSize: 14 },
   content: { flex: 1, width: "100%" },
   card: {

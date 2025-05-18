@@ -1,3 +1,5 @@
+// En el componente Trips
+
 import React, { useCallback, useState } from "react";
 import {
   View,
@@ -5,6 +7,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { logout } from "../services/authService";
@@ -28,7 +31,6 @@ export default function Trips() {
       setUser(fetchedUser);
       console.log("Fetched user:", fetchedUser);
 
-      // get travels
       const trips = await travelService.getTravelsByDriver(fetchedUser.id);
       setMyTrips(trips);
 
@@ -49,35 +51,6 @@ export default function Trips() {
       fetchUserData();
     }, [])
   );
-
-  const latitude = 48.8584;
-  const longitude = 2.2945;
-
-  const drivingTrips = [
-    {
-      name: "Eiffel Tower",
-      description: "A famous iron tower located in Paris, France.",
-      latitude: 48.8584,
-      longitude: 2.2945,
-    },
-    {
-      name: "Great Wall of China",
-      description:
-        "A series of fortifications in China, built to protect against invasions.",
-      latitude: 40.4319,
-      longitude: 116.5704,
-    },
-  ];
-
-  const enrolledTripsData = [
-    {
-      name: "Machu Picchu",
-      description:
-        "An ancient Incan city located in the Andes mountains of Peru.",
-      latitude: -13.1631,
-      longitude: -72.545,
-    },
-  ];
 
   return (
     <View style={styles.container}>
@@ -104,15 +77,21 @@ export default function Trips() {
         {(view === "driving" ? myTrips : enrolledTrips).map((place, index) => (
           <PlaceCard
             key={index}
+            id={place.id}
             name={place.origin + " ➝ " + place.destination}
             description={place.time}
-            latitude={latitude}
-            longitude={longitude}
+            latitudeOrigin={place.latitudeOrigin}
+            longitudeOrigin={place.longitudeOrigin}
+            latitudeDestination={place.latitudeDestination}
+            longitudeDestination={place.longitudeDestination}
             driver={place.driver.name}
             date={place.date}
             time={place.time}
             price={place.price}
             enrolled={view === "enrolled"}
+            status={place.status}
+            userId={user?.id}
+            fetchUserData={fetchUserData}
           />
         ))}
       </ScrollView>
@@ -149,7 +128,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   activeTab: {
-    backgroundColor: "#d9534f",
+    backgroundColor: "#FF8000",
   },
   tabText: {
     color: "#fff",
