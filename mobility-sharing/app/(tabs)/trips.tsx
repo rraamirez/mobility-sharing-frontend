@@ -85,6 +85,7 @@ export default function Trips() {
             latitudeDestination={place.latitudeDestination}
             longitudeDestination={place.longitudeDestination}
             driver={place.driver.name}
+            driverRating={place.driver.rating}
             date={place.date}
             time={place.time}
             price={place.price}
