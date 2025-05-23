@@ -202,6 +202,21 @@ export default function Search() {
                                 item.travelRecurrenceModel?.id ? "Yes" : "No"
                               }`}
                             </Text>
+                            {item.environmentalActionLevel && (
+                              <Text
+                                style={[
+                                  styles.environmentText,
+                                  item.environmentalActionLevel === "HIGH"
+                                    ? styles.envHigh
+                                    : item.environmentalActionLevel === "MEDIUM"
+                                    ? styles.envMedium
+                                    : styles.envLow,
+                                ]}
+                              >
+                                🌍 Environmental Necessity:{" "}
+                                {item.environmentalActionLevel}
+                              </Text>
+                            )}
                           </View>
                         </View>
 
@@ -255,6 +270,7 @@ export default function Search() {
                         🌿 Driver EcoRank: {group[0].driver.ecoRank.name}
                       </Text>
                     )}
+
                     <Text style={styles.priceText}>
                       {`💰 ${group[0].price} Rupees`}
                     </Text>
@@ -266,6 +282,21 @@ export default function Search() {
                         group[0].travelRecurrenceModel?.id ? "Yes" : "No"
                       }`}
                     </Text>
+                    {group[0].environmentalActionLevel && (
+                      <Text
+                        style={[
+                          styles.environmentText,
+                          group[0].environmentalActionLevel === "HIGH"
+                            ? styles.envHigh
+                            : group[0].environmentalActionLevel === "MEDIUM"
+                            ? styles.envMedium
+                            : styles.envLow,
+                        ]}
+                      >
+                        🌍 Environmental Necessity:{" "}
+                        {group[0].environmentalActionLevel}
+                      </Text>
+                    )}
                   </View>
                 </View>
 
@@ -536,5 +567,29 @@ const styles = StyleSheet.create({
     marginTop: 4,
     marginBottom: 8,
     fontSize: 14,
+  },
+  environmentText: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginVertical: 8,
+    alignSelf: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+
+  envHigh: {
+    color: "#b71c1c",
+    backgroundColor: "#ff8a80",
+  },
+
+  envMedium: {
+    color: "#f57f17",
+    backgroundColor: "#ffeb3b",
+  },
+
+  envLow: {
+    color: "#1b5e20",
+    backgroundColor: "#66bb6a",
   },
 });

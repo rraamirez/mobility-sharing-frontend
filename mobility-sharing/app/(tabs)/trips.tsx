@@ -111,6 +111,7 @@ export default function Trips() {
               driver={place.driver.name}
               driverRating={place.driver.rating ?? 3}
               driverEcoRankName={place.driver.ecoRank.name}
+              environmentalAction={place.environmentalActionLevel ?? "LOW"}
               date={place.date}
               time={place.time}
               price={place.price}

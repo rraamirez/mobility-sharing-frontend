@@ -7,6 +7,7 @@ export interface PlaceCardProps {
   driver?: string;
   driverRating?: number;
   driverEcoRankName?: string;
+  environmentalAction?: string;
   date?: string;
   time?: string;
   price?: number;
