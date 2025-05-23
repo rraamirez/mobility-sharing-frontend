@@ -85,6 +85,7 @@ export default function Trips() {
             latitudeDestination={place.latitudeDestination}
             longitudeDestination={place.longitudeDestination}
             driver={place.driver.name}
+            driverRating={place.driver.rating ?? 3}
             date={place.date}
             time={place.time}
             price={place.price}
@@ -104,7 +105,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-start",
     alignItems: "center",
-    backgroundColor: "#000",
+    backgroundColor: "#121212",
     paddingTop: 20,
   },
   motto: {

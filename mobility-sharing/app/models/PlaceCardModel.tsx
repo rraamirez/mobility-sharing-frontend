@@ -3,6 +3,7 @@ export interface PlaceCardProps {
   name?: string;
   description?: string;
   driver?: string;
+  driverRating?: number;
   date?: string;
   time?: string;
   price?: number;

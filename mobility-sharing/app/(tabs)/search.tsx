@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   Modal,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, UrlTile } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import travelService from "../services/travelService";
 import { TravelModel } from "../models/TravelModel";
@@ -112,6 +112,13 @@ export default function Search() {
     <View style={styles.container}>
       <Text style={styles.slogan}>It's your moment. Take the ride.</Text>
 
+      <Ionicons
+        name="map-outline"
+        size={150}
+        color="#0DBF6F"
+        style={styles.logo}
+      />
+
       <TextInput
         style={styles.searchInput}
         placeholder="Enter origin..."
@@ -169,6 +176,8 @@ export default function Search() {
                             </Text>
                             <Text style={styles.driverText}>
                               {`👤 ${item.driver.name}`}
+                              {item.driver.rating != null &&
+                                `  ⭐ ${item.driver.rating}`}
                             </Text>
                             <Text style={styles.priceText}>
                               {`💰 ${item.price} Rupees`}
@@ -226,6 +235,8 @@ export default function Search() {
                     </Text>
                     <Text style={styles.driverText}>
                       {`👤 ${group[0].driver.name}`}
+                      {group[0].driver.rating != null &&
+                        `  ⭐ ${group[0].driver.rating}`}
                     </Text>
                     <Text style={styles.priceText}>
                       {`💰 ${group[0].price} Rupees`}
@@ -284,6 +295,31 @@ export default function Search() {
       >
         <View style={styles.modalContainer}>
           {selectedTravel && (
+            // <MapView
+            //   style={styles.fullMap}
+            //   initialRegion={{
+            //     latitude: selectedTravel.latitudeOrigin!,
+            //     longitude: selectedTravel.longitudeOrigin!,
+            //     latitudeDelta: 0.1,
+            //     longitudeDelta: 0.1,
+            //   }}
+            // >
+            //   <Marker
+            //     pinColor="blue"
+            //     coordinate={{
+            //       latitude: selectedTravel.latitudeOrigin!,
+            //       longitude: selectedTravel.longitudeOrigin!,
+            //     }}
+            //     title="Origin"
+            //   />
+            //   <Marker
+            //     coordinate={{
+            //       latitude: selectedTravel.latitudeDestination!,
+            //       longitude: selectedTravel.longitudeDestination!,
+            //     }}
+            //     title="Destination"
+            //   />
+            // </MapView>
             <MapView
               style={styles.fullMap}
               initialRegion={{
@@ -293,6 +329,10 @@ export default function Search() {
                 longitudeDelta: 0.1,
               }}
             >
+              <UrlTile
+                urlTemplate="https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                maximumZ={19}
+              />
               <Marker
                 pinColor="blue"
                 coordinate={{
@@ -325,7 +365,7 @@ export default function Search() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: "#121212",
     padding: 20,
   },
   slogan: {
@@ -462,5 +502,9 @@ const styles = StyleSheet.create({
   closeButtonText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  logo: {
+    alignSelf: "center",
+    marginBottom: 20,
   },
 });

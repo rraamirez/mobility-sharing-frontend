@@ -21,6 +21,7 @@ const PlaceCard = ({
   name = "Unknown Place",
   description = "No description available",
   driver = "Unknown Driver",
+  driverRating = 3,
   date = "Unknown Date",
   time = "Unknown Time",
   price = 0,
@@ -57,6 +58,21 @@ const PlaceCard = ({
       .cancelTravel(travelId)
       .then((response) => {
         Alert.alert("Success", "Travel has been canceled.");
+        if (fetchUserData) fetchUserData();
+      })
+      .catch((error) => {
+        Alert.alert("Error", error.message);
+      });
+  };
+
+  const handleComplete = async (travelId: number) => {
+    travelService
+      .completeTravel(travelId)
+      .then((response) => {
+        Alert.alert(
+          "Success",
+          "Travel has been completed! Users can now rate this travel!."
+        );
         if (fetchUserData) fetchUserData();
       })
       .catch((error) => {
@@ -127,6 +143,13 @@ const PlaceCard = ({
       .catch((err) => Alert.alert("Error", err.message));
   };
 
+  //logic for handling complete or cancel travels
+  const travelDateObj = date ? new Date(date) : null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const isPastOrToday =
+    travelDateObj !== null && travelDateObj.getTime() <= today.getTime();
+
   return (
     <View style={styles.cardContainer}>
       <Text style={styles.placeName}>{name}</Text>
@@ -134,6 +157,7 @@ const PlaceCard = ({
 
       <View style={styles.detailsContainer}>
         <Text style={styles.detailText}>🚗 Driver: {driver}</Text>
+        <Text style={styles.detailText}>⭐ Rating: {driverRating} / 5</Text>
         <Text style={styles.detailText}>📅 Date: {date}</Text>
         <Text style={styles.detailText}>⏰ Time: {time}</Text>
         <Text style={styles.detailText}>💰 Price: {price} rupees</Text>
@@ -218,10 +242,12 @@ const PlaceCard = ({
         <TouchableOpacity
           style={[
             styles.button,
-            status === "CANCELED"
+            status === "CANCELED" || status == "COMPLETED"
               ? styles.showMapButton
-              : enrolled
-              ? styles.cancelButton
+              : !enrolled
+              ? isPastOrToday
+                ? styles.completeButton
+                : styles.cancelButton
               : styles.unenrollButton,
           ]}
           onPress={() => {
@@ -229,7 +255,11 @@ const PlaceCard = ({
               Alert.alert("Info", "This travel has been canceled.");
             } else if (!enrolled) {
               if (id !== undefined) {
-                handleCancel(id);
+                if (isPastOrToday) {
+                  handleComplete(id);
+                } else {
+                  handleCancel(id);
+                }
               } else {
                 Alert.alert("Error", "Travel ID is undefined.");
               }
@@ -241,9 +271,13 @@ const PlaceCard = ({
           <Text style={styles.buttonText}>
             {status === "CANCELED"
               ? "Cancelled"
-              : enrolled
-              ? "Unenroll"
-              : "Cancel Travel"}
+              : status === "COMPLETED"
+              ? "Completed"
+              : !enrolled
+              ? isPastOrToday
+                ? "Complete"
+                : "Cancel Travel"
+              : "Unenroll"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -449,6 +483,9 @@ const styles = StyleSheet.create({
   travellerInfo: {
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+  completeButton: {
+    backgroundColor: "#0DBF6F",
   },
 });
 

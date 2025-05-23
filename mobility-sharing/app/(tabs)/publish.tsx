@@ -184,7 +184,7 @@ export default function Publish() {
       style={styles.scrollContainer}
       contentContainerStyle={styles.container}
     >
-      <Text style={styles.title}>Post a Trip</Text>
+      <Text style={styles.slogan}>Post a Trip</Text>
 
       <TextInput
         style={styles.input}
@@ -231,7 +231,7 @@ export default function Publish() {
       <View style={styles.row}>
         <TextInput
           style={[styles.input, styles.flex]}
-          placeholder="Example: Calle Cerro del Oro 60, Granada"
+          placeholder="Example: Calle Gran Capitan 5, Granada"
           value={arrivalAddress}
           onChangeText={setArrivalAddress}
         />
@@ -408,9 +408,16 @@ export default function Publish() {
 }
 
 const styles = StyleSheet.create({
-  scrollContainer: { flex: 1, backgroundColor: "#000" },
+  scrollContainer: { flex: 1, backgroundColor: "#121212" },
   container: { padding: 20, alignItems: "center" },
   title: { fontSize: 24, color: "#fff", marginBottom: 20 },
+  slogan: {
+    color: "#FFF",
+    fontSize: 20,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 20,
+  },
   input: {
     width: "100%",
     padding: 10,
