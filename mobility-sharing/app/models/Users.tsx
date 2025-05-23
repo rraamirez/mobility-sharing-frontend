@@ -13,4 +13,10 @@ export interface UserModel {
   createdAt: string;
   role: RoleModel;
   rating: number;
+  ecoRank: EcoRankModel;
+}
+
+export interface EcoRankModel {
+  id: number;
+  name: string;
 }

@@ -22,6 +22,7 @@ const PlaceCard = ({
   description = "No description available",
   driver = "Unknown Driver",
   driverRating = 3,
+  driverEcoRankName = "Unknown EcoRank",
   date = "Unknown Date",
   time = "Unknown Time",
   price = 0,
@@ -158,6 +159,12 @@ const PlaceCard = ({
       <View style={styles.detailsContainer}>
         <Text style={styles.detailText}>🚗 Driver: {driver}</Text>
         <Text style={styles.detailText}>⭐ Rating: {driverRating} / 5</Text>
+        {enrolled && (
+          <Text style={[styles.detailText, styles.ecoRankText]}>
+            🌿 Driver EcoRank: {driverEcoRankName}
+          </Text>
+        )}
+
         <Text style={styles.detailText}>📅 Date: {date}</Text>
         <Text style={styles.detailText}>⏰ Time: {time}</Text>
         <Text style={styles.detailText}>💰 Price: {price} rupees</Text>
@@ -486,6 +493,17 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     backgroundColor: "#0DBF6F",
+  },
+  ecoRankText: {
+    backgroundColor: "#e0f7ec",
+    color: "#2e7d32",
+    fontWeight: "bold",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    alignSelf: "flex-start",
+    overflow: "hidden",
+    marginBottom: 4,
   },
 });
 

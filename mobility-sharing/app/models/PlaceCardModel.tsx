@@ -1,9 +1,12 @@
+import { EcoRankModel } from "./Users";
+
 export interface PlaceCardProps {
   id?: number;
   name?: string;
   description?: string;
   driver?: string;
   driverRating?: number;
+  driverEcoRankName?: string;
   date?: string;
   time?: string;
   price?: number;
