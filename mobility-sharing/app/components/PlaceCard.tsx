@@ -22,8 +22,10 @@ const PlaceCard = ({
   description = "No description available",
   driver = "Unknown Driver",
   driverRating = 3,
+  driverEcoRankName = "Unknown EcoRank",
   date = "Unknown Date",
   time = "Unknown Time",
+  environmentalAction = "LOW",
   price = 0,
   latitudeOrigin = 0,
   longitudeOrigin = 0,
@@ -158,6 +160,12 @@ const PlaceCard = ({
       <View style={styles.detailsContainer}>
         <Text style={styles.detailText}>🚗 Driver: {driver}</Text>
         <Text style={styles.detailText}>⭐ Rating: {driverRating} / 5</Text>
+        {enrolled && (
+          <Text style={[styles.detailText, styles.ecoRankText]}>
+            🌿 Driver EcoRank: {driverEcoRankName}
+          </Text>
+        )}
+
         <Text style={styles.detailText}>📅 Date: {date}</Text>
         <Text style={styles.detailText}>⏰ Time: {time}</Text>
         <Text style={styles.detailText}>💰 Price: {price} rupees</Text>
@@ -177,6 +185,18 @@ const PlaceCard = ({
             Confirmation: {localUserTravelStatus}
           </Text>
         )}
+        <Text
+          style={[
+            styles.environmentText,
+            environmentalAction === "HIGH"
+              ? styles.envHigh
+              : environmentalAction === "MEDIUM"
+              ? styles.envMedium
+              : styles.envLow,
+          ]}
+        >
+          🌍 Environmental Necessity: {environmentalAction}
+        </Text>
       </View>
 
       {mapVisible && (
@@ -486,6 +506,41 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     backgroundColor: "#0DBF6F",
+  },
+  ecoRankText: {
+    backgroundColor: "#e0f7ec",
+    color: "#2e7d32",
+    fontWeight: "bold",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    alignSelf: "flex-start",
+    overflow: "hidden",
+    marginBottom: 4,
+  },
+  environmentText: {
+    fontSize: 16,
+    fontWeight: "600",
+    marginVertical: 8,
+    alignSelf: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+
+  envHigh: {
+    color: "#b71c1c",
+    backgroundColor: "#ff8a80",
+  },
+
+  envMedium: {
+    color: "#f57f17",
+    backgroundColor: "#ffeb3b",
+  },
+
+  envLow: {
+    color: "#1b5e20",
+    backgroundColor: "#66bb6a",
   },
 });
 

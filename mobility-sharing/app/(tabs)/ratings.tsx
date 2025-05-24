@@ -136,17 +136,14 @@ export default function Ratings() {
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <View style={styles.card}>
-                <Text
-                  style={styles.cardTitle}
-                >{`${item.origin} ➡️ ${item.destination}`}</Text>
+                <Text style={styles.cardTitle}>
+                  {`${item.origin} ➡️ ${item.destination}`}
+                </Text>
                 <Text
                   style={styles.cardText}
                 >{`Driver: ${item.driver.name}`}</Text>
                 <Text style={styles.cardText}>{`Date: ${item.date}`}</Text>
                 <Text style={styles.cardText}>{`Time: ${item.time}`}</Text>
-                <Text
-                  style={styles.cardText}
-                >{`Date: ${item.driver.name}`}</Text>
                 <Text style={styles.cardText}>{`Status: ${item.status}`}</Text>
                 <TouchableOpacity
                   style={styles.rateButton}
@@ -154,6 +151,12 @@ export default function Ratings() {
                 >
                   <Text style={styles.buttonText}>Rate Now</Text>
                 </TouchableOpacity>
+              </View>
+            )}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyContainer}>
+                <Icon name="star-o" size={120} color="#888" />
+                <Text style={styles.emptyText}>No trips to rate yet</Text>
               </View>
             )}
           />
@@ -164,6 +167,14 @@ export default function Ratings() {
             data={ratedTrips}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => <RatingCard rating={item} />}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyContainer}>
+                <Icon name="star" size={120} color="#888" />
+                <Text style={styles.emptyText}>
+                  You haven't rated any trips yet
+                </Text>
+              </View>
+            )}
           />
         )}
 
@@ -172,6 +183,12 @@ export default function Ratings() {
             data={receivedRatings}
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => <RatingCard rating={item} />}
+            ListEmptyComponent={() => (
+              <View style={styles.emptyContainer}>
+                <Icon name="heart-o" size={120} color="#888" />
+                <Text style={styles.emptyText}>No ratings received yet</Text>
+              </View>
+            )}
           />
         )}
       </View>
@@ -187,7 +204,7 @@ export default function Ratings() {
               <TouchableOpacity key={star} onPress={() => setRating(star)}>
                 <Icon
                   name={star <= rating ? "star" : "star-o"}
-                  size={30}
+                  size={80}
                   color="gold"
                   style={{ marginHorizontal: 5 }}
                 />
@@ -290,5 +307,18 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 5,
     marginTop: 10,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 50,
+    marginRight: 20,
+  },
+  emptyText: {
+    color: "#888",
+    fontSize: 16,
+    marginTop: 12,
+    textAlign: "center",
   },
 });
