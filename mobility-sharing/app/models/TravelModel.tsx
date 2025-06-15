@@ -16,4 +16,5 @@ export interface TravelModel {
   latitudeDestination?: number;
   longitudeDestination?: number;
   status: "ACTIVE" | "COMPLETED" | "CANCELED"; // Enum values from TravelStatus
+  environmentalActionLevel?: "LOW" | "MEDIUM" | "HIGH";
 }

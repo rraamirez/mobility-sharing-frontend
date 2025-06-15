@@ -100,6 +100,13 @@ export default function ProfileScreen() {
           <Text style={styles.ratingText}>⭐ Rating: {user.rating}/5</Text>
         </View>
       )}
+      {user?.ecoRank && (
+        <View style={styles.ecoRankContainer}>
+          <Text style={styles.ecoRankText}>
+            🌿 EcoRank: {user.ecoRank.name}
+          </Text>
+        </View>
+      )}
       {user && (
         <View style={styles.profileContainer}>
           <Text style={styles.label}>Name (Max 100 characters)</Text>
@@ -233,5 +240,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#f39c12",
+  },
+  ecoRankContainer: {
+    alignItems: "center",
+    marginVertical: 10,
+    marginBottom: 20,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    backgroundColor: "#e0f7ec",
+    borderRadius: 12,
+  },
+
+  ecoRankText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#2e7d32",
   },
 });

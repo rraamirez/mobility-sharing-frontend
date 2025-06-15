@@ -10,12 +10,12 @@ import {
   Alert,
 } from "react-native";
 import { useFocusEffect, useRouter } from "expo-router";
-import { logout } from "../services/authService";
 import PlaceCard from "../components/PlaceCard";
 import { TravelModel } from "../models/TravelModel";
 import userService from "../services/userService";
 import { UserModel } from "../models/Users";
 import travelService from "../services/travelService";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function Trips() {
   const router = useRouter();
@@ -54,6 +54,8 @@ export default function Trips() {
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>Your Trips</Text>
+
       <Text style={styles.motto}>
         "Shared journeys, better tomorrows. Every ride connects a story."
       </Text>
@@ -74,27 +76,52 @@ export default function Trips() {
       </View>
 
       <ScrollView style={styles.placesList}>
-        {(view === "driving" ? myTrips : enrolledTrips).map((place, index) => (
-          <PlaceCard
-            key={index}
-            id={place.id}
-            name={place.origin + " ➝ " + place.destination}
-            description={place.time}
-            latitudeOrigin={place.latitudeOrigin}
-            longitudeOrigin={place.longitudeOrigin}
-            latitudeDestination={place.latitudeDestination}
-            longitudeDestination={place.longitudeDestination}
-            driver={place.driver.name}
-            driverRating={place.driver.rating ?? 3}
-            date={place.date}
-            time={place.time}
-            price={place.price}
-            enrolled={view === "enrolled"}
-            status={place.status}
-            userId={user?.id}
-            fetchUserData={fetchUserData}
-          />
-        ))}
+        {(() => {
+          const trips = view === "driving" ? myTrips : enrolledTrips;
+
+          if (trips.length === 0) {
+            return (
+              <View style={styles.emptyContainer}>
+                <Ionicons
+                  name={
+                    view === "driving" ? "car-sport-outline" : "people-outline"
+                  }
+                  size={200}
+                  color="#888"
+                />
+                <Text style={styles.emptyText}>
+                  {view === "driving"
+                    ? "No driving trips yet"
+                    : "No enrolled trips yet"}
+                </Text>
+              </View>
+            );
+          }
+
+          return trips.map((place, index) => (
+            <PlaceCard
+              key={index}
+              id={place.id}
+              name={place.origin + " ➝ " + place.destination}
+              description={place.time}
+              latitudeOrigin={place.latitudeOrigin}
+              longitudeOrigin={place.longitudeOrigin}
+              latitudeDestination={place.latitudeDestination}
+              longitudeDestination={place.longitudeDestination}
+              driver={place.driver.name}
+              driverRating={place.driver.rating ?? 3}
+              driverEcoRankName={place.driver.ecoRank.name}
+              environmentalAction={place.environmentalActionLevel ?? "LOW"}
+              date={place.date}
+              time={place.time}
+              price={place.price}
+              enrolled={view === "enrolled"}
+              status={place.status}
+              userId={user?.id}
+              fetchUserData={fetchUserData}
+            />
+          ));
+        })()}
       </ScrollView>
     </View>
   );
@@ -139,5 +166,19 @@ const styles = StyleSheet.create({
     width: "100%",
     paddingHorizontal: 20,
     marginLeft: 25,
+  },
+  title: { fontSize: 28, fontWeight: "bold", color: "#fff", marginBottom: 10 },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 50,
+    marginRight: 20,
+  },
+  emptyText: {
+    color: "#888",
+    fontSize: 16,
+    marginTop: 12,
+    textAlign: "center",
   },
 });

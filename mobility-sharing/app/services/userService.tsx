@@ -30,9 +30,27 @@ export const updateMyUser = async (user: any) => {
   }
 };
 
+export const getWeeklyEnvironmentalStats = async () => {
+  try {
+    const response = await api.get(`${API_URL}/weekly-environmental-stats`);
+    console.log("Weekly environmental stats:", response.data);
+    return response.data;
+  } catch (error: any) {
+    console.error(
+      "Get environmental stats error:",
+      error.response?.data || error.message
+    );
+    throw new Error(
+      error.response?.data?.message ||
+        "Error while fetching environmental stats"
+    );
+  }
+};
+
 const userService = {
   getMyUser,
   updateMyUser,
+  getWeeklyEnvironmentalStats,
 };
 
 export default userService;
