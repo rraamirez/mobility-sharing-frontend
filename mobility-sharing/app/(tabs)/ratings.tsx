@@ -204,7 +204,7 @@ export default function Ratings() {
               <TouchableOpacity key={star} onPress={() => setRating(star)}>
                 <Icon
                   name={star <= rating ? "star" : "star-o"}
-                  size={80}
+                  size={50}
                   color="gold"
                   style={{ marginHorizontal: 5 }}
                 />

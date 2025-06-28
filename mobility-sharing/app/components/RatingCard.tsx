@@ -20,8 +20,6 @@ const RatingCard: React.FC<RatingCardProps> = ({ rating }) => {
     }).format(date);
   };
 
-  console.log("Rating:", rating);
-
   return (
     <View style={styles.card}>
       <Text style={styles.cardTitle}>
