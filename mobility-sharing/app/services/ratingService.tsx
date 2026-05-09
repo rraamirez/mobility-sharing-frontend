@@ -1,7 +1,7 @@
 import api from "./api";
 import { RatingModel } from "../models/RatingModel";
 
-const API_URL = "http://10.0.2.2:8080/rating";
+const API_URL = "/rating";
 
 export const getAllRatings = async () => {
   try {

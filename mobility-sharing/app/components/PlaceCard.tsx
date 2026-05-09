@@ -1,20 +1,17 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Alert,
-  Modal,
-  FlatList,
-  TextInput,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
 import { PlaceCardProps } from "../models/PlaceCardModel";
 import travelService from "../services/travelService";
 import userTravelService from "../services/userTravelService";
 import { useFocusEffect } from "@react-navigation/native";
 import { UserTravelModel } from "../models/UserTravelModel";
+import MapPreview from "./MapPreview";
 
 const PlaceCard = ({
   id,
@@ -201,31 +198,19 @@ const PlaceCard = ({
 
       {mapVisible && (
         <View style={styles.mapContainer}>
-          <MapView
+          <MapPreview
             style={styles.map}
-            initialRegion={{
+            origin={{
               latitude: latitudeOrigin,
               longitude: longitudeOrigin,
-              latitudeDelta: 0.05,
-              longitudeDelta: 0.05,
             }}
-          >
-            <Marker
-              coordinate={{
-                latitude: latitudeOrigin,
-                longitude: longitudeOrigin,
-              }}
-              title={name}
-              pinColor="blue"
-            />
-            <Marker
-              coordinate={{
+            destination={{
                 latitude: latitudeDestination,
                 longitude: longitudeDestination,
-              }}
-              title={name}
-            />
-          </MapView>
+            }}
+            originTitle={name}
+            destinationTitle={name}
+          />
         </View>
       )}
 

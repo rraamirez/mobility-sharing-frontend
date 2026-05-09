@@ -2,7 +2,7 @@ import api from "./api";
 import { TravelModel } from "../models/TravelModel";
 import { UserTravelModel } from "../models/UserTravelModel";
 
-const API_URL = "http://10.0.2.2:8080/user-travel";
+const API_URL = "/user-travel";
 
 export const bookTravel = async (travelId: number, userId: number) => {
   try {

@@ -1,7 +1,7 @@
 import api from "./api";
 import { TravelModel } from "../models/TravelModel";
 
-const API_URL = "http://10.0.2.2:8080/travel";
+const API_URL = "/travel";
 
 export const getUnratedTrips = async (userId: number) => {
   try {

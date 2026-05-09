@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   Modal,
 } from "react-native";
-import MapView, { Marker, UrlTile } from "react-native-maps";
 import { Ionicons } from "@expo/vector-icons";
 import travelService from "../services/travelService";
 import { TravelModel } from "../models/TravelModel";
@@ -17,6 +16,7 @@ import { UserModel } from "../models/Users";
 import userService from "../services/userService";
 import userTravelService from "../services/userTravelService";
 import { useFocusEffect, useRouter } from "expo-router";
+import MapPreview from "../components/MapPreview";
 
 export default function Search() {
   const [origin, setOrigin] = useState("");
@@ -236,7 +236,7 @@ export default function Search() {
                                 item.latitudeDestination &&
                                 item.longitudeDestination
                               ) {
-                                setSelectedTravel(group[0]);
+                                setSelectedTravel(item);
                               } else {
                                 alert("Map coordinates are not available.");
                               }
@@ -343,60 +343,20 @@ export default function Search() {
       >
         <View style={styles.modalContainer}>
           {selectedTravel && (
-            // <MapView
-            //   style={styles.fullMap}
-            //   initialRegion={{
-            //     latitude: selectedTravel.latitudeOrigin!,
-            //     longitude: selectedTravel.longitudeOrigin!,
-            //     latitudeDelta: 0.1,
-            //     longitudeDelta: 0.1,
-            //   }}
-            // >
-            //   <Marker
-            //     pinColor="blue"
-            //     coordinate={{
-            //       latitude: selectedTravel.latitudeOrigin!,
-            //       longitude: selectedTravel.longitudeOrigin!,
-            //     }}
-            //     title="Origin"
-            //   />
-            //   <Marker
-            //     coordinate={{
-            //       latitude: selectedTravel.latitudeDestination!,
-            //       longitude: selectedTravel.longitudeDestination!,
-            //     }}
-            //     title="Destination"
-            //   />
-            // </MapView>
-            <MapView
+            <MapPreview
               style={styles.fullMap}
-              initialRegion={{
+              origin={{
                 latitude: selectedTravel.latitudeOrigin!,
                 longitude: selectedTravel.longitudeOrigin!,
-                latitudeDelta: 0.1,
-                longitudeDelta: 0.1,
               }}
-            >
-              <UrlTile
-                urlTemplate="https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                maximumZ={19}
-              />
-              <Marker
-                pinColor="blue"
-                coordinate={{
-                  latitude: selectedTravel.latitudeOrigin!,
-                  longitude: selectedTravel.longitudeOrigin!,
-                }}
-                title="Origin"
-              />
-              <Marker
-                coordinate={{
+              destination={{
                   latitude: selectedTravel.latitudeDestination!,
                   longitude: selectedTravel.longitudeDestination!,
-                }}
-                title="Destination"
-              />
-            </MapView>
+              }}
+              originTitle="Origin"
+              destinationTitle="Destination"
+              showTiles
+            />
           )}
           <TouchableOpacity
             style={styles.closeButton}

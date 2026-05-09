@@ -11,12 +11,12 @@ import {
   ActivityIndicator,
   ScrollView,
 } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
 import { useFocusEffect, useRouter } from "expo-router";
 import userService from "../services/userService";
 import { UserModel } from "../models/Users";
 import travelService from "../services/travelService";
-import MapView, { Marker } from "react-native-maps";
+import MapPreview from "../components/MapPreview";
+import DateTimeField from "../components/DateTimeField";
 
 export default function Publish() {
   const [origin, setOrigin] = useState("");
@@ -270,50 +270,29 @@ export default function Publish() {
 
       {coordinates && (
         <View style={styles.mapContainer}>
-          <MapView
+          <MapPreview
             style={styles.map}
-            initialRegion={{
-              latitude: coordinates.latitude,
-              longitude: coordinates.longitude,
-              latitudeDelta: 0.1,
-              longitudeDelta: 0.1,
-            }}
-          >
-            <Marker
-              coordinate={coordinates}
-              title="Origin"
-              description={address}
-              pinColor="blue"
-            />
-            {arrivalCoordinates && (
-              <Marker
-                coordinate={arrivalCoordinates}
-                title="Destination"
-                description={arrivalAddress}
-              />
-            )}
-          </MapView>
+            origin={coordinates}
+            destination={arrivalCoordinates}
+            originTitle="Origin"
+            destinationTitle="Destination"
+            originDescription={address}
+            destinationDescription={arrivalAddress}
+          />
         </View>
       )}
 
       <Modal visible={showMapModal} animationType="slide">
         <View style={styles.modalContainer}>
-          <MapView
+          <MapPreview
             style={styles.modalMap}
-            initialRegion={{
-              latitude: coordinates?.latitude || 40.4168,
-              longitude: coordinates?.longitude || -3.7038,
-              latitudeDelta: 0.05,
-              longitudeDelta: 0.05,
-            }}
-          >
-            {coordinates && (
-              <Marker coordinate={coordinates} title="Origin" pinColor="blue" />
-            )}
-            {arrivalCoordinates && (
-              <Marker coordinate={arrivalCoordinates} title="Destination" />
-            )}
-          </MapView>
+            origin={coordinates || { latitude: 40.4168, longitude: -3.7038 }}
+            destination={arrivalCoordinates}
+            originTitle="Origin"
+            destinationTitle="Destination"
+            originDescription={address}
+            destinationDescription={arrivalAddress}
+          />
           <TouchableOpacity
             onPress={() => setShowMapModal(false)}
             style={styles.closeButton}
@@ -366,33 +345,33 @@ export default function Publish() {
       </TouchableOpacity>
 
       {showPicker === "start" && (
-        <DateTimePicker
+        <DateTimeField
           value={startDate || new Date()}
           mode="date"
           display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(_, selectedDate) => {
+          onChange={(selectedDate) => {
             setShowPicker(null);
             if (selectedDate) setStartDate(selectedDate);
           }}
         />
       )}
       {showPicker === "end" && isRecurring && (
-        <DateTimePicker
+        <DateTimeField
           value={endDate || new Date()}
           mode="date"
           display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(_, selectedDate) => {
+          onChange={(selectedDate) => {
             setShowPicker(null);
             if (selectedDate) setEndDate(selectedDate);
           }}
         />
       )}
       {showPicker === "time" && (
-        <DateTimePicker
+        <DateTimeField
           value={new Date()}
           mode="time"
           display={Platform.OS === "ios" ? "spinner" : "default"}
-          onChange={(_, selectedTime) => {
+          onChange={(selectedTime) => {
             setShowPicker(null);
             if (selectedTime)
               setTime(selectedTime.toTimeString().split(" ")[0]);

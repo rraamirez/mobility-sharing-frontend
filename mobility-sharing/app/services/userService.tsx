@@ -1,8 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import api from "./api";
 
-const API_URL = "http://10.0.2.2:8080/mobility-sharing-user";
+const API_URL = "/mobility-sharing-user";
 
 export const getMyUser = async () => {
   try {
